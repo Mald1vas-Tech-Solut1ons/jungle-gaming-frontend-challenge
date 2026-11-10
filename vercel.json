@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "headers": [
+    {
+      "source": "/mockServiceWorker.js",
+      "headers": [{ "key": "Service-Worker-Allowed", "value": "/" }]
+    }
+  ]
+}

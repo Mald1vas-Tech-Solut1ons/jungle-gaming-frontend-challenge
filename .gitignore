@@ -30,3 +30,4 @@ reports/local
 *.njsproj
 *.sln
 *.sw?
+/Figma_files/
