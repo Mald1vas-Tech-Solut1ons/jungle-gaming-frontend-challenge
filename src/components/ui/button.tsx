@@ -40,18 +40,25 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, isPending = false, disabled, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
+    const classes = cn(buttonVariants({ variant, size, className }))
+
+    // ATENÇÃO (Radix Slot 1.2.x): no modo asChild, o filho do Slot precisa ser
+    // LITERALMENTE um único elemento React — arrays (mesmo com entradas nulas)
+    // falham em `React.isValidElement` e o Slot lança "Expected a single
+    // React element child or `Slottable`". O spinner nunca é irmão do filho.
+    if (asChild) {
+      return (
+        <Slot className={classes} ref={ref} {...props}>
+          {children}
+        </Slot>
+      )
+    }
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={disabled || isPending}
-        aria-busy={isPending || undefined}
-        {...props}
-      >
+      <button className={classes} ref={ref} disabled={disabled || isPending} aria-busy={isPending || undefined} {...props}>
         {isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
         {children}
-      </Comp>
+      </button>
     )
   },
 )
