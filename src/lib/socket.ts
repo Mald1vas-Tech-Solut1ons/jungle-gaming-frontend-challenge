@@ -1,4 +1,4 @@
-import { io, type Socket } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
 import type { ClientToServerEvents, NftUpdatedEvent, OrderUpdatedEvent, ServerToClientEvents } from '@/api/contracts'
 import { queryClient } from './query-client'
 import { getToken, onSessionChange, onSessionExpired } from './session'
@@ -125,8 +125,13 @@ function emitAuth(token: string | null) {
   currentToken = token
 }
 
-export function startRealtime() {
+export async function startRealtime() {
   if (socket) return
+  // Import dinâmico DEPOIS do worker.start(): o engine.io-client captura
+  // `globalThis.WebSocket` na avaliação do módulo, e o MSW só aplica o patch
+  // de WebSocket durante o start — importar antes deixaria o cliente usar o
+  // construtor real e tentar resolver `realtime.jungle.mock` via DNS.
+  const { io } = await import('socket.io-client')
   socket = io(SOCKET_URL, {
     transports: ['websocket'],
     reconnection: true,

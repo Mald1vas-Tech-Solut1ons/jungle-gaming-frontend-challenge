@@ -11,7 +11,7 @@ import { db, mutate } from './db'
 
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'wss://realtime.jungle.mock'
 
-const realtime = ws.link(`${SOCKET_URL}/socket.io/*`)
+const realtime = ws.link(`${SOCKET_URL}/*`)
 
 interface Conn {
   id: number

@@ -15,7 +15,7 @@ async function bootstrap() {
   const { startMocks } = await import('./mocks/browser')
   await startMocks()
 
-  startRealtime()
+  await startRealtime()
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
