@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { CartPage } from '@/components/cart/cart-page'
 
-/** Stub — preenchido pela frente de comércio. */
 export const Route = createFileRoute('/cart')({
-  component: () => <div />,
+  component: CartPage,
 })
