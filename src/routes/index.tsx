@@ -1,6 +1,35 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+import { CatalogPage } from '@/components/catalog/catalog-page'
 
-/** Stub — preenchido pela frente de catálogo. */
+const CATEGORY_VALUES = ['art', 'gaming', 'collectibles', 'music', 'photography', 'sports'] as const
+const RARITY_VALUES = ['common', 'rare', 'epic', 'legendary'] as const
+const CHAIN_VALUES = ['ethereum', 'polygon', 'arbitrum'] as const
+const SORT_VALUES = ['recent', 'price_asc', 'price_desc', 'popular', 'name'] as const
+
+/**
+ * Lista de valores na URL: aceita valor único ou repetido.
+ * Saída opcional para que navegar para `/` sem search params continue válido
+ * em todo o app (os padrões são aplicados no componente).
+ */
+function enumListSchema<TOutput extends string>(valueSchema: z.ZodType<TOutput>) {
+  return z
+    .union([valueSchema, z.array(valueSchema)])
+    .transform((value): TOutput[] => (typeof value === 'string' ? [value] : value))
+    .catch([])
+    .optional()
+}
+
+const catalogSearchSchema = z.object({
+  q: z.string().optional().catch(''),
+  category: enumListSchema(z.enum(CATEGORY_VALUES)),
+  rarity: enumListSchema(z.enum(RARITY_VALUES)),
+  chain: enumListSchema(z.enum(CHAIN_VALUES)),
+  sort: z.enum(SORT_VALUES).optional().catch('recent'),
+  page: z.number().int().min(1).optional().catch(1),
+})
+
 export const Route = createFileRoute('/')({
-  component: () => <div />,
+  validateSearch: catalogSearchSchema,
+  component: CatalogPage,
 })

@@ -116,6 +116,7 @@ export interface NftListParams {
   chain?: Chain[]
   minPrice?: string
   maxPrice?: string
+  featured?: boolean
   sort?: NftSort
   page?: number
   pageSize?: number

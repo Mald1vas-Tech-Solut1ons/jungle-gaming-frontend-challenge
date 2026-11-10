@@ -22,6 +22,7 @@ export function useNftList(params: NftListParams) {
       if (params.chain?.length) qs.set('chain', params.chain.join(','))
       if (params.minPrice) qs.set('minPrice', params.minPrice)
       if (params.maxPrice) qs.set('maxPrice', params.maxPrice)
+      if (params.featured) qs.set('featured', 'true')
       if (params.sort) qs.set('sort', params.sort)
       if (params.page) qs.set('page', String(params.page))
       if (params.pageSize) qs.set('pageSize', String(params.pageSize))
