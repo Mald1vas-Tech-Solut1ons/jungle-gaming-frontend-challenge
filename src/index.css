@@ -2,25 +2,49 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Design tokens — extraídos da prévia do Figma (refinar com valores exatos) */
+/* Design tokens — tema "jungle retro" extraído da prévia do Figma do desafio */
 @theme {
   --color-background: #1c120c;
-  --color-surface: #2a1b12;
-  --color-surface-2: #3a2617;
-  --color-border: #4a3220;
   --color-foreground: #f6ead9;
-  --color-muted: #c4ab8f;
+
+  --color-card: #241610;
+  --color-card-foreground: #f6ead9;
+
+  --color-popover: #2a1b12;
+  --color-popover-foreground: #f6ead9;
+
   --color-primary: #e8862e;
   --color-primary-foreground: #1c120c;
+
+  --color-secondary: #3a2617;
+  --color-secondary-foreground: #f6ead9;
+
+  --color-muted: #32200f;
+  --color-muted-foreground: #c4ab8f;
+
   --color-accent: #f2a65a;
+  --color-accent-foreground: #1c120c;
+
+  --color-destructive: #e5484d;
+  --color-destructive-foreground: #ffffff;
+
   --color-success: #4ade80;
-  --color-danger: #f87171;
   --color-warning: #fbbf24;
 
-  --font-sans: 'Space Mono', ui-monospace, monospace;
-  --font-display: 'Press Start 2P', 'Space Mono', monospace;
-  --radius-lg: 0.75rem;
+  --color-border: #4a3220;
+  --color-input: #4a3220;
+  --color-ring: #f2a65a;
+
+  --color-surface: #2a1b12;
+  --color-surface-2: #3a2617;
+
+  --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --font-sans: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Press Start 2P', 'Space Mono', ui-monospace, monospace;
 }
 
 html {
@@ -29,11 +53,26 @@ html {
 
 body {
   @apply bg-background text-foreground font-sans antialiased;
+  background-image:
+    radial-gradient(60rem 40rem at 110% -10%, rgb(232 134 46 / 0.07), transparent 60%),
+    radial-gradient(50rem 30rem at -20% 110%, rgb(232 134 46 / 0.05), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
+}
+
+/* Scrollbar discreta */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 /* Skeleton com shimmer, respeitando movimento reduzido */
@@ -60,4 +99,18 @@ body {
   .skeleton::after {
     animation: none;
   }
+}
+
+/* Utilidade: textura de pixel para cabeçalhos */
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* Título display compartilhado */
+.display-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  text-transform: uppercase;
 }
