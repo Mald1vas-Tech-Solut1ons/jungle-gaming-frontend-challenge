@@ -249,6 +249,7 @@ Build: `npm run build` (`tsc -b && vite build`).
 - `npm run test:visual:update` — regenera baselines visuais.
 - Relatório HTML em `playwright-report/` após cada execução.
 - **Relatório publicado por link**: uma cópia do relatório HTML fica em `/reports/playwright/` na demo (gerada pelo CI e committada após cada rodada).
+- **Vídeos de demonstração**: gravações de cada cenário de simulação em `/videos-demo/` na demo (abertura, filtros na URL, rede lenta, preço mudando no checkout, clique duplo/timeout, queda do tempo real, evento duplicado/antigo, desconexão da carteira) — para o avaliador ver os diferenciais sem instalar nada.
 
 ## Auditoria Lighthouse
 
