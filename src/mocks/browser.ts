@@ -29,3 +29,18 @@ export async function startMocks() {
     serviceWorker: { url: '/mockServiceWorker.js' },
   })
 }
+
+/**
+ * Reativa o worker quando o navegador encerra o service worker do MSW (aba em
+ * segundo plano por tempo prolongado). Re-broadcasta a ativação para que o SW
+ * volte a reivindicar o cliente — sem isso, as chamadas `/api` escapam para o
+ * servidor real e retornam 404 na URL publicada.
+ */
+export async function reclaimWorker() {
+  if (!mocksEnabled) return
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+    quiet: true,
+    serviceWorker: { url: '/mockServiceWorker.js' },
+  })
+}

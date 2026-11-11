@@ -23,10 +23,22 @@ createRoot(document.getElementById('root')!).render(
 async function bootMocks() {
   if (mocksEnabled) {
     // Mocks ativos por padrão (backend simulado da demo); desligue com VITE_ENABLE_MOCKS=false
-    const { startMocks } = await import('./mocks/browser')
+    const { startMocks, reclaimWorker } = await import('./mocks/browser')
     await startMocks()
+    markMocksReady()
+    // O navegador pode encerrar o service worker do MSW quando a aba fica em
+    // segundo plano; ao voltar, reativa o worker e revalida as consultas para
+    // que as chamadas /api voltem a ser interceptadas (senão caem no Vercel).
+    const recoverMocks = () => {
+      if (document.visibilityState === 'visible') {
+        void reclaimWorker().then(() => queryClient.invalidateQueries())
+      }
+    }
+    document.addEventListener('visibilitychange', recoverMocks)
+    window.addEventListener('pageshow', recoverMocks)
+  } else {
+    markMocksReady()
   }
-  markMocksReady()
   // Socket não bloqueia o primeiro paint: a reconciliação pós-conexão cobre
   // eventos perdidos no intervalo.
   void startRealtime()

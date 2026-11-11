@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import type { ApiErrorBody, ApiErrorCode } from '@/api/contracts'
 import { mocksReady } from './mocks-ready'
+import { mocksEnabled } from './mock-info'
 import { getGuestCartId, getToken, notifySessionExpired } from './session'
 
 /**
@@ -59,6 +60,20 @@ function toApiError(error: AxiosError): ApiError {
   return new ApiError(status, 'INTERNAL_ERROR', 'Algo deu errado. Tente novamente.')
 }
 
+/**
+ * Resposta de erro SEM o envelope do mock (`{ error: { code, … } }`) enquanto
+ * os mocks estão ativos: o service worker do MSW não interceptou a chamada —
+ * ela escapou para o servidor real (Vercel) e voltou com 404/HTML. A correção
+ * é reativar o worker e tentar de novo, não tratar como erro de negócio.
+ */
+function isMockMiss(error: AxiosError): boolean {
+  if (!mocksEnabled) return false
+  const data = error.response?.data as unknown
+  if (typeof data !== 'object' || data === null) return true // HTML/texto do servidor real
+  const err = (data as Record<string, unknown>).error
+  return typeof err !== 'object' || err === null || typeof (err as Record<string, unknown>).code !== 'string'
+}
+
 export const api = axios.create({
   baseURL: '/api',
   timeout: API_TIMEOUT_MS,
@@ -79,15 +94,25 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const config = error.config as (InternalAxiosRequestConfig & { _retryCount?: number; skipRetry?: boolean }) | undefined
+    const config = error.config as (InternalAxiosRequestConfig & { _retryCount?: number; _reclaimAttempted?: boolean; skipRetry?: boolean }) | undefined
     const apiError = toApiError(error)
 
     if (apiError.code === 'SESSION_EXPIRED') {
       notifySessionExpired()
     }
 
-    // Retry com espera crescente apenas para GET idempotente e erros retryable.
     const method = (config?.method ?? 'get').toLowerCase()
+
+    // Mock inativo (SW do MSW encerrado em segundo plano): reativa o worker e
+    // tenta de novo. Só GET idempotente e no máximo uma vez por requisição.
+    if (method === 'get' && !config?._reclaimAttempted && isMockMiss(error)) {
+      config!._reclaimAttempted = true
+      const { reclaimWorker } = await import('../mocks/browser')
+      await reclaimWorker()
+      return api.request(config as AxiosRequestConfig)
+    }
+
+    // Retry com espera crescente apenas para GET idempotente e erros retryable.
     const attempt = config?._retryCount ?? 0
     if (method === 'get' && !config?.skipRetry && attempt < 2 && isRetryable(apiError)) {
       config!._retryCount = attempt + 1
