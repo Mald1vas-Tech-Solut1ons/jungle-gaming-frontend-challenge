@@ -87,9 +87,7 @@ export function Footer() {
 
           {/* Faixa da marca */}
           <div className="mt-10 flex flex-col items-center justify-between gap-3 rounded-lg bg-surface-2 px-6 py-4 text-center md:flex-row md:text-left">
-            <span className="logo-kurio text-lg text-foreground">
-              KURI<span className="text-primary">O</span>
-            </span>
+            <img src="/logo.svg" alt="Kurio" width={180} height={45} />
             <span className="text-xs text-muted-foreground">contato@kurio.market</span>
             <span className="text-xs text-muted-foreground">+55 11 4002 8922</span>
           </div>

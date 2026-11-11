@@ -11,9 +11,7 @@ import { cn } from '@/lib/utils'
 function Logo() {
   return (
     <Link to="/" className="flex items-center" aria-label="Kurio Marketplace — início" data-testid="header-logo">
-      <span className="logo-kurio text-2xl text-foreground">
-        KURI<span className="text-primary">O</span>
-      </span>
+      <img src="/logo.svg" alt="Kurio" width={200} height={50} />
     </Link>
   )
 }
