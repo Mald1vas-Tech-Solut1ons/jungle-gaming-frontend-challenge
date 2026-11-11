@@ -109,7 +109,7 @@ O backend simulado é um sistema completo e consistente em `src/mocks/`:
 - **Botão "Adicionar ao carrinho" no detalhe desktop:** o frame tem só COMPRAR (vai ao carrinho); foi acrescentado um botão de ícone para adicionar sem sair da página (equivalente ao botão de carrinho do frame mobile).
 - **Telas sem frame mobile** (Confirmação, Perfil, Carteiras): seguem o padrão das demais — barra de topo com voltar, conteúdo empilhado, abas em pílula no lugar da sidebar.
 - **Tablet (768px):** sem frame; header desktop, filtros em gaveta lateral, grade de 3 colunas.
-- **Imagens de NFTs:** o Figma não fornece os ativos; as 12 artes foram **geradas localmente** em `public/nfts/` e distribuídas deterministicamente entre os 36 NFTs (WebP 1024px/q80, ~1MB no total).
+- **Imagens de NFTs:** o Figma contém 4 artes (Emerald Ape, Sage Nomad, Ivory Baron e Golden Beat), repetidas entre os cards. Para dar variedade visual aos 36 NFTs do catálogo — e tornar busca, filtros e paginação distinguíveis a olho — foram usadas 12 artes **geradas localmente** no mesmo estilo (retrato ilustrado sobre fundo pastel), em `public/nfts/`, distribuídas deterministicamente (WebP 1024px/q80, ~1MB no total).
 - **Formato de valores:** ETH em pt-BR (`1,19 ETH`), coerente com o restante da interface em português; o frame usa ponto decimal.
 - **Logotipo:** wordmark "KURIO" em texto, como nos frames (não há arquivo vetorial no Figma exportado).
 
