@@ -120,6 +120,11 @@ export function settleOrder(orderId: string, outcome?: 'confirmed' | 'rejected')
 }
 
 function scheduleSettlement(order: Order) {
+  // Cenário `order-timeout`: o pedido fica PENDENTE para exercitar a
+  // recuperação por idempotência (o cliente estoura o timeout e reenvia a
+  // mesma chave). A liquidação acontece via controle
+  // (POST /api/__mock/orders/:id/settle) ou pelo painel de simulação.
+  if (isScenario('order-timeout')) return
   if (runtime.orderSettleMs === null || settleTimers.has(order.id)) return
   const createdAt = new Date(order.createdAt).getTime()
   const wait = Math.max(0, createdAt + runtime.orderSettleMs - Date.now())

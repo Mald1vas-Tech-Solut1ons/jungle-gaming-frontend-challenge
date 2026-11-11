@@ -139,7 +139,7 @@ export function CheckoutPage() {
         <p className="mt-2 text-sm text-muted-foreground">Revise os dados do colecionador, a carteira e a rede antes de confirmar.</p>
       </header>
 
-      {cart && items.length === 0 ? (
+      {cart && items.length === 0 && !pendingRecovery ? (
         <Alert variant="info">
           <AlertTitle>Seu carrinho está vazio</AlertTitle>
           <AlertDescription>
@@ -149,6 +149,8 @@ export function CheckoutPage() {
             </Button>
           </AlertDescription>
         </Alert>
+      ) : cart && items.length === 0 && pendingRecovery ? (
+        <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="space-y-6">
@@ -163,22 +165,7 @@ export function CheckoutPage() {
             )}
 
             {pendingRecovery && (
-              <Alert variant="info">
-                <AlertTitle>O servidor demorou para responder</AlertTitle>
-                <AlertDescription>
-                  Seu pedido pode ter sido criado. Verifique o status antes de tentar novamente — a mesma tentativa será retomada.
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 w-full"
-                    data-testid="recover-order"
-                    isPending={submitting}
-                    onClick={() => void recover()}
-                  >
-                    Verificar status
-                  </Button>
-                </AlertDescription>
-              </Alert>
+              <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />
             )}
 
             {state.kind === 'conflict' && (
@@ -256,12 +243,12 @@ export function CheckoutPage() {
           <aside className="lg:sticky lg:top-20">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle>Revisão do pedido</CardTitle>
+                <CardTitle>Seus NFTs</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <QuoteSummary quote={quote} isPending={quotePending} />
                 <Button size="lg" className="w-full" data-testid="submit-order" isPending={submitting} disabled={submitDisabled} onClick={handleSubmitOrder}>
-                  Confirmar pedido
+                  Confirmar compra
                 </Button>
                 {state.kind === 'conflict' && !confirmChanges && (
                   <p className="text-center text-xs text-muted-foreground">Marque a confirmação acima para reenviar.</p>
@@ -272,6 +259,20 @@ export function CheckoutPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function RecoveryAlert({ submitting, onRecover }: { submitting: boolean; onRecover: () => void }) {
+  return (
+    <Alert variant="info">
+      <AlertTitle>O servidor demorou para responder</AlertTitle>
+      <AlertDescription>
+        Seu pedido pode ter sido criado. Verifique o status antes de tentar novamente — a mesma tentativa será retomada.
+        <Button variant="outline" size="sm" className="mt-3 w-full" data-testid="recover-order" isPending={submitting} onClick={onRecover}>
+          Verificar status
+        </Button>
+      </AlertDescription>
+    </Alert>
   )
 }
 

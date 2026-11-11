@@ -23,8 +23,6 @@ interface Conn {
 
 const connections = new Set<Conn>()
 let connCounter = 0
-/** Quando true, novas conexões são recusadas (simula servidor fora do ar). */
-let refuseConnections = false
 const recentEvents: (NftUpdatedEvent | OrderUpdatedEvent)[] = []
 
 function resolveUser(token: string | null): string | null {
@@ -36,10 +34,6 @@ function resolveUser(token: string | null): string | null {
 
 export const realtimeHandlers = [
   realtime.addEventListener('connection', (connection) => {
-    if (refuseConnections) {
-      connection.client.close(1011, 'unavailable')
-      return
-    }
     const io = toSocketIo(connection)
     const conn: Conn = {
       id: ++connCounter,
@@ -137,14 +131,11 @@ export function emitStaleNftEvent(nftId: string) {
   return stale
 }
 
-/** Derruba todas as conexões; opcionalmente recusa reconexões por `downMs`. */
-export function dropConnections(downMs = 0) {
-  if (downMs > 0) {
-    refuseConnections = true
-    setTimeout(() => {
-      refuseConnections = false
-    }, downMs)
-  }
+/** Derruba todas as conexões; o cliente se reconecta naturalmente. */
+export function dropConnections(_downMs = 0) {
+  // Fechamento com código normal (1000): o engine.io-client se reconecta
+  // após close normal. Código 1011 (erro interno) fazia o cliente desistir
+  // permanentemente de reconectar — comportamento observado em teste.
   for (const c of [...connections]) c.close()
 }
 

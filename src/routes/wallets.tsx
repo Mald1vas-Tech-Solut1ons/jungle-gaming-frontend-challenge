@@ -19,17 +19,20 @@ export const Route = createFileRoute('/wallets')({
     const { data: wallets, isLoading } = useWallets()
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editing, setEditing] = useState<Wallet | null>(null)
+    const [formKey, setFormKey] = useState(0)
 
     const list = wallets ?? []
     const atLimit = list.length >= 2
 
     function openCreate() {
       setEditing(null)
+      setFormKey((k) => k + 1)
       setDialogOpen(true)
     }
 
     function openEdit(wallet: Wallet) {
       setEditing(wallet)
+      setFormKey((k) => k + 1)
       setDialogOpen(true)
     }
 
@@ -37,9 +40,11 @@ export const Route = createFileRoute('/wallets')({
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <PageHeader title="Carteiras" description="Gerencie as carteiras usadas para receber seus NFTs." />
-          <Button onClick={openCreate} data-testid="wallet-add">
-            Nova carteira
-          </Button>
+          {!atLimit && (
+            <Button onClick={openCreate} data-testid="wallet-add">
+              Nova carteira
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
@@ -64,7 +69,16 @@ export const Route = createFileRoute('/wallets')({
           </>
         )}
 
-        <WalletFormDialog open={dialogOpen} onOpenChange={setDialogOpen} wallet={editing} existingWallets={list} />
+        {/* `key` único por abertura força remontagem do formulário: sem isso o
+            estado (label/endereço/checkbox principal) vaza entre criar e editar
+            e entre aberturas consecutivas (useState inicial não é reexecutado). */}
+        <WalletFormDialog
+          key={`${editing?.id ?? 'nova'}-${formKey}`}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          wallet={editing}
+          existingWallets={list}
+        />
       </div>
     )
   },

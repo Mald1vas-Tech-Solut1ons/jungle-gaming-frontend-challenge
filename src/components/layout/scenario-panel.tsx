@@ -76,6 +76,9 @@ export function ScenarioPanel() {
       await queryClient.invalidateQueries({ queryKey: ['cart'] })
       await queryClient.invalidateQueries({ queryKey: ['quote'] })
       await refreshState()
+      // Fecha o painel para o avaliador ver a loja reagir (e não ficar atrás
+      // do overlay do Radix bloqueando interação).
+      setOpen(false)
     } catch {
       toast.error('Não foi possível trocar o cenário.')
     }

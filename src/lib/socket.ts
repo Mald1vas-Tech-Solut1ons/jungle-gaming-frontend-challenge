@@ -55,6 +55,23 @@ function remember(event: RealtimeEvent): boolean {
   return true
 }
 
+/**
+ * Segunda linha de defesa contra regressão: após um reload completo da página
+ * o mapa de versões em memória começa vazio. Um evento antigo emitido nesse
+ * intervalo não pode regredir um estado mais novo já presente no cache REST.
+ */
+function isStaleAgainstCache(event: RealtimeEvent): boolean {
+  const key = event.resource.kind === 'nft' ? 'nft' : 'order'
+  const cached = queryClient.getQueryData([key, event.resource.id]) as { version?: number } | undefined
+  const cachedVersion = cached?.version
+  if (cachedVersion != null && cachedVersion > event.version) {
+    // Registra a versão mais nova para eventos seguintes
+    latestVersions.set(resourceKey(event), Math.max(latestVersions.get(resourceKey(event)) ?? 0, cachedVersion))
+    return true
+  }
+  return false
+}
+
 /** Atualiza o cache do TanStack Query em lugar (sem flicker) e invalida derivados. */
 function applyNftEvent(event: NftUpdatedEvent) {
   const { nft } = event.payload
@@ -87,6 +104,7 @@ function applyOrderEvent(event: OrderUpdatedEvent) {
 
 function handleEvent(event: RealtimeEvent) {
   if (!remember(event)) return
+  if (isStaleAgainstCache(event)) return
   if (event.type === 'nft.updated') {
     applyNftEvent(event)
     notify({ kind: 'nft', message: 'Preço/disponibilidade atualizados em tempo real.', event })
