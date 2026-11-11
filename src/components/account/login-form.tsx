@@ -3,11 +3,12 @@ import type { FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLogin } from '@/hooks/use-session'
 import { normalizeError } from '@/lib/api'
+import { toast } from 'sonner'
+import { PasswordInput } from './auth-shell'
 import { FieldError } from './field-error'
 import { emailError, type FieldErrors } from './validators'
 
@@ -74,12 +75,6 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Entrar na conta</CardTitle>
-        <CardDescription>Acesse o marketplace com seu e-mail e senha.</CardDescription>
-      </CardHeader>
-      <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {formError ? (
             <Alert variant="destructive">
@@ -88,13 +83,13 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
             </Alert>
           ) : null}
           <div className="space-y-2">
-            <Label htmlFor="login-email">E-mail</Label>
+            <Label htmlFor="login-email" className="sr-only">E-mail</Label>
             <Input
               id="login-email"
               data-testid="login-email"
               type="email"
               autoComplete="email"
-              placeholder="voce@exemplo.com"
+              placeholder="contato@email.com"
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value)
@@ -106,11 +101,10 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
             <FieldError id="login-email-error">{fieldErrors.email}</FieldError>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="login-password">Senha</Label>
-            <Input
+            <Label htmlFor="login-password" className="sr-only">Senha</Label>
+            <PasswordInput
               id="login-password"
               data-testid="login-password"
-              type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
@@ -122,12 +116,19 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
               aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
             />
             <FieldError id="login-password-error">{fieldErrors.password}</FieldError>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="cursor-pointer text-sm text-accent underline-offset-4 hover:underline"
+                onClick={() => toast.info('A recuperação de senha está fora do escopo da simulação. Use as contas de demonstração.')}
+              >
+                Esqueceu a senha?
+              </button>
+            </div>
           </div>
-          <Button type="submit" className="w-full" isPending={login.isPending} data-testid="login-submit">
+          <Button type="submit" className="h-12 w-full text-base max-md:h-[60px] max-md:rounded-lg" isPending={login.isPending} data-testid="login-submit">
             Entrar
           </Button>
         </form>
-      </CardContent>
-    </Card>
   )
 }

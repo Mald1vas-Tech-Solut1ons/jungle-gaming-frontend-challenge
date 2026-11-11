@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useChangePassword } from '@/hooks/use-account'
 import { normalizeError } from '@/lib/api'
+import { PasswordInput } from './auth-shell'
 import { FieldError } from './field-error'
 import { passwordError, type FieldErrors } from './validators'
 
@@ -53,19 +52,16 @@ export function PasswordForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Alterar senha</CardTitle>
-        <CardDescription>Defina uma nova senha para a sua conta.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-          <div className="space-y-2">
+    <section aria-labelledby="password-title" className="max-w-[417px]">
+      <h2 id="password-title" className="text-lg font-bold">
+        Alterar senha
+      </h2>
+      <form className="mt-5 space-y-5" onSubmit={handleSubmit} noValidate>
+          <div className="space-y-2.5">
             <Label htmlFor="password-current">Senha atual</Label>
-            <Input
+            <PasswordInput
               id="password-current"
               data-testid="password-current"
-              type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               value={currentPassword}
@@ -78,12 +74,11 @@ export function PasswordForm() {
             />
             <FieldError id="password-current-error">{fieldErrors.currentPassword}</FieldError>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="password-new">Nova senha</Label>
-            <Input
+            <PasswordInput
               id="password-new"
               data-testid="password-new"
-              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
               value={newPassword}
@@ -97,12 +92,11 @@ export function PasswordForm() {
             <FieldError id="password-new-error">{fieldErrors.newPassword}</FieldError>
             <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres, com ao menos um número e uma letra.</p>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="password-confirm">Confirmar nova senha</Label>
-            <Input
+            <PasswordInput
               id="password-confirm"
               data-testid="password-confirm"
-              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
               value={confirm}
@@ -115,11 +109,10 @@ export function PasswordForm() {
             />
             <FieldError id="password-confirm-error">{fieldErrors.confirm}</FieldError>
           </div>
-          <Button type="submit" isPending={changePassword.isPending} data-testid="password-save">
+          <Button type="submit" className="h-10 min-w-[130px]" isPending={changePassword.isPending} data-testid="password-save">
             Alterar senha
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+      </form>
+    </section>
   )
 }

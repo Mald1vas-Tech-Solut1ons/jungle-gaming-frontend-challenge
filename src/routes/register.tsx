@@ -1,6 +1,6 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
-import { PageHeader } from '@/components/account/page-header'
+import { AuthShell } from '@/components/account/auth-shell'
 import { RegisterForm } from '@/components/account/register-form'
 import { getToken } from '@/lib/session'
 
@@ -16,16 +16,9 @@ export const Route = createFileRoute('/register')({
   component: function RegisterPage() {
     const { redirect: redirectTo } = Route.useSearch()
     return (
-      <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-        <PageHeader title="Criar conta" description="Comece sua coleção na Kurio." />
+      <AuthShell mode="register" redirectTo={redirectTo} description="Crie seu perfil de colecionador para comprar, favoritar e acompanhar lançamentos.">
         <RegisterForm redirectTo={redirectTo} />
-        <p className="text-center text-sm text-muted-foreground">
-          Já tem uma conta?{' '}
-          <Link to="/login" search={redirectTo ? { redirect: redirectTo } : undefined} className="text-primary underline-offset-4 hover:underline">
-            Entrar
-          </Link>
-        </p>
-      </div>
+      </AuthShell>
     )
   },
 })

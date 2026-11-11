@@ -1,9 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { PageHeader } from '@/components/account/page-header'
+import { AccountLayout } from '@/components/account/account-layout'
 import { PasswordForm } from '@/components/account/password-form'
 import { ProfileForm } from '@/components/account/profile-form'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMe } from '@/hooks/use-account'
 import { getToken } from '@/lib/session'
@@ -18,19 +17,18 @@ export const Route = createFileRoute('/profile')({
   component: function ProfilePage() {
     const { data: user, isLoading } = useMe()
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-        <PageHeader title="Perfil do colecionador" description="Atualize seus dados públicos e a senha da conta." />
+      <AccountLayout title="Perfil">
+        <h1 className="sr-only">Perfil do colecionador</h1>
         {isLoading ? (
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <Skeleton className="h-5 w-1/3" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-10 w-28" />
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-2" aria-label="Carregando perfil">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div key={index} className="space-y-3">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+            <Skeleton className="h-24 w-full md:col-span-2" />
+          </div>
         ) : user ? (
           <ProfileForm user={user} />
         ) : (
@@ -39,8 +37,10 @@ export const Route = createFileRoute('/profile')({
             <AlertDescription>Não foi possível carregar seus dados. Tente recarregar a página.</AlertDescription>
           </Alert>
         )}
-        <PasswordForm />
-      </div>
+        <div className="mt-12 border-t border-rule pt-8">
+          <PasswordForm />
+        </div>
+      </AccountLayout>
     )
   },
 })

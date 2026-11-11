@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import type { ChangeEvent, FormEvent } from 'react'
+import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -96,130 +95,164 @@ export function ProfileForm({ user }: ProfileFormProps) {
     )
   }
 
+  const field = (id: string, label: string, control: ReactNode, error?: string, hint?: string) => (
+    <div className="space-y-2.5">
+      <Label htmlFor={id} className="text-base">
+        {label}
+        <span className="ml-0.5 text-destructive" aria-hidden="true">
+          *
+        </span>
+      </Label>
+      {control}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
+      {hint && !error && (
+        <p id={`${id}-hint`} className="text-xs text-tan">
+          {hint}
+        </p>
+      )}
+    </div>
+  )
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dados da conta</CardTitle>
-        <CardDescription>Informações públicas exibidas no marketplace.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="profile-avatar-input">Avatar</Label>
-            <div className="flex flex-wrap items-center gap-4">
-              <Avatar className="size-16">
-                <AvatarImage src={avatarUrl ?? undefined} alt={`Avatar de ${name.trim() || 'você'}`} />
-                <AvatarFallback>{initials(name)}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col gap-2">
-                <Input
-                  id="profile-avatar-input"
-                  data-testid="profile-avatar-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  aria-invalid={fieldErrors.avatarUrl ? true : undefined}
-                  aria-describedby={fieldErrors.avatarUrl ? 'profile-avatar-error' : undefined}
-                  className="max-w-60"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => {
-                    setAvatarUrl(null)
-                    clearError('avatarUrl')
-                  }}
-                  disabled={!avatarUrl}
-                >
-                  Remover avatar
-                </Button>
-              </div>
-            </div>
-            <FieldError id="profile-avatar-error">{fieldErrors.avatarUrl}</FieldError>
-            <p className="text-xs text-muted-foreground">PNG, JPG, WebP ou GIF de até 1 MB.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="profile-name">Nome</Label>
-            <Input
-              id="profile-name"
-              data-testid="profile-name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value)
-                clearError('name')
+    <section aria-labelledby="profile-title">
+      <h2 id="profile-title" className="text-lg font-bold">
+        Perfil do colecionador
+      </h2>
+      <form className="mt-6 grid gap-x-7 gap-y-6 md:grid-cols-2" onSubmit={handleSubmit} noValidate>
+        {field(
+          'profile-name',
+          'Nome de exibição',
+          <Input
+            id="profile-name"
+            data-testid="profile-name"
+            type="text"
+            autoComplete="name"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value)
+              clearError('name')
+            }}
+            aria-required="true"
+            aria-invalid={fieldErrors.name ? true : undefined}
+            aria-describedby={fieldErrors.name ? 'profile-name-error' : undefined}
+          />,
+          fieldErrors.name,
+        )}
+        {field(
+          'profile-username',
+          'Nome de usuário',
+          <Input
+            id="profile-username"
+            data-testid="profile-username"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={username}
+            onChange={(event) => {
+              setUsername(event.target.value.toLowerCase())
+              clearError('username')
+            }}
+            aria-required="true"
+            aria-invalid={fieldErrors.username ? true : undefined}
+            aria-describedby={fieldErrors.username ? 'profile-username-error' : 'profile-username-hint'}
+          />,
+          fieldErrors.username,
+          '3–20 caracteres: letras minúsculas, números, ponto ou _.',
+        )}
+        {field(
+          'profile-email',
+          'E-mail',
+          <Input
+            id="profile-email"
+            data-testid="profile-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => {
+              setEmail(event.target.value)
+              clearError('email')
+            }}
+            aria-required="true"
+            aria-invalid={fieldErrors.email ? true : undefined}
+            aria-describedby={fieldErrors.email ? 'profile-email-error' : undefined}
+          />,
+          fieldErrors.email,
+        )}
+
+        <div className="space-y-2.5">
+          <span className="block text-base" id="profile-avatar-label">
+            Avatar
+          </span>
+          <div className="flex flex-wrap items-center gap-5">
+            <Avatar className="size-12 border border-rule bg-tile">
+              <AvatarImage src={avatarUrl ?? undefined} alt={`Avatar de ${name.trim() || 'você'}`} className="animate-fade object-cover" />
+              <AvatarFallback className="bg-tile text-sm font-bold text-accent">{initials(name)}</AvatarFallback>
+            </Avatar>
+            <label className="inline-flex h-10 cursor-pointer items-center rounded-md bg-primary px-6 text-sm font-bold text-primary-foreground transition-colors duration-200 hover:bg-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background">
+              Alterar
+              <input
+                id="profile-avatar-input"
+                data-testid="profile-avatar-input"
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleAvatarChange}
+                aria-label="Alterar avatar"
+                aria-invalid={fieldErrors.avatarUrl ? true : undefined}
+                aria-describedby={fieldErrors.avatarUrl ? 'profile-avatar-error' : 'profile-avatar-hint'}
+              />
+            </label>
+            <button
+              type="button"
+              className="cursor-pointer text-sm text-foreground transition-colors duration-200 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => {
+                setAvatarUrl(null)
+                clearError('avatarUrl')
               }}
-              aria-invalid={fieldErrors.name ? true : undefined}
-              aria-describedby={fieldErrors.name ? 'profile-name-error' : undefined}
-            />
-            <FieldError id="profile-name-error">{fieldErrors.name}</FieldError>
+              disabled={!avatarUrl}
+            >
+              Remover
+            </button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="profile-username">Nome de usuário</Label>
-            <Input
-              id="profile-username"
-              data-testid="profile-username"
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => {
-                setUsername(event.target.value.toLowerCase())
-                clearError('username')
-              }}
-              aria-invalid={fieldErrors.username ? true : undefined}
-              aria-describedby={fieldErrors.username ? 'profile-username-error' : undefined}
-            />
-            <FieldError id="profile-username-error">{fieldErrors.username}</FieldError>
-            <p className="text-xs text-muted-foreground">3–20 caracteres: letras minúsculas, números, ponto ou _.</p>
+          <FieldError id="profile-avatar-error">{fieldErrors.avatarUrl}</FieldError>
+          <p id="profile-avatar-hint" className="text-xs text-tan">
+            PNG, JPG, WebP ou GIF de até 1 MB.
+          </p>
+        </div>
+
+        <div className="space-y-2.5 md:col-span-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="profile-bio" className="text-base">
+              Bio
+            </Label>
+            <span className="text-xs text-tan" aria-hidden="true">
+              {bio.length}/{MAX_BIO_CHARS}
+            </span>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="profile-email">E-mail</Label>
-            <Input
-              id="profile-email"
-              data-testid="profile-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value)
-                clearError('email')
-              }}
-              aria-invalid={fieldErrors.email ? true : undefined}
-              aria-describedby={fieldErrors.email ? 'profile-email-error' : undefined}
-            />
-            <FieldError id="profile-email-error">{fieldErrors.email}</FieldError>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between gap-2">
-              <Label htmlFor="profile-bio">Bio</Label>
-              <span className="text-xs text-muted-foreground" aria-hidden="true">
-                {bio.length}/{MAX_BIO_CHARS}
-              </span>
-            </div>
-            <Textarea
-              id="profile-bio"
-              data-testid="profile-bio"
-              rows={4}
-              maxLength={MAX_BIO_CHARS}
-              placeholder="Conte um pouco sobre você e sua coleção…"
-              value={bio}
-              onChange={(event) => {
-                setBio(event.target.value)
-                clearError('bio')
-              }}
-              aria-invalid={fieldErrors.bio ? true : undefined}
-              aria-describedby={fieldErrors.bio ? 'profile-bio-error' : undefined}
-            />
-            <FieldError id="profile-bio-error">{fieldErrors.bio}</FieldError>
-          </div>
-          <Button type="submit" isPending={updateProfile.isPending} data-testid="profile-save">
-            Salvar alterações
+          <Textarea
+            id="profile-bio"
+            data-testid="profile-bio"
+            rows={3}
+            maxLength={MAX_BIO_CHARS}
+            placeholder="Conte um pouco sobre você e sua coleção…"
+            value={bio}
+            onChange={(event) => {
+              setBio(event.target.value)
+              clearError('bio')
+            }}
+            aria-invalid={fieldErrors.bio ? true : undefined}
+            aria-describedby={fieldErrors.bio ? 'profile-bio-error' : undefined}
+          />
+          <FieldError id="profile-bio-error">{fieldErrors.bio}</FieldError>
+        </div>
+
+        <div className="md:col-span-2">
+          <Button type="submit" className="h-10 min-w-[130px]" isPending={updateProfile.isPending} data-testid="profile-save">
+            Salvar
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      </form>
+    </section>
   )
 }

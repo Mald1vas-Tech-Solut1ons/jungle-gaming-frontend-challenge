@@ -3,11 +3,11 @@ import type { FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRegister } from '@/hooks/use-session'
 import { normalizeError } from '@/lib/api'
+import { PasswordInput } from './auth-shell'
 import { FieldError } from './field-error'
 import { emailError, nameError, passwordError, type FieldErrors } from './validators'
 
@@ -75,12 +75,6 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Criar sua conta</CardTitle>
-        <CardDescription>Preencha seus dados para começar a colecionar.</CardDescription>
-      </CardHeader>
-      <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {formError ? (
             <Alert variant="destructive">
@@ -89,13 +83,13 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
             </Alert>
           ) : null}
           <div className="space-y-2">
-            <Label htmlFor="register-name">Nome</Label>
+            <Label className="text-sm text-muted-foreground" htmlFor="register-name">Nome</Label>
             <Input
               id="register-name"
               data-testid="register-name"
               type="text"
               autoComplete="name"
-              placeholder="Seu nome"
+              placeholder="Nome de colecionador"
               value={name}
               onChange={(event) => {
                 setName(event.target.value)
@@ -107,13 +101,13 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
             <FieldError id="register-name-error">{fieldErrors.name}</FieldError>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="register-email">E-mail</Label>
+            <Label className="text-sm text-muted-foreground" htmlFor="register-email">E-mail</Label>
             <Input
               id="register-email"
               data-testid="register-email"
               type="email"
               autoComplete="email"
-              placeholder="voce@exemplo.com"
+              placeholder="Digite seu e-mail"
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value)
@@ -125,11 +119,10 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
             <FieldError id="register-email-error">{fieldErrors.email}</FieldError>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="register-password">Senha</Label>
-            <Input
+            <Label className="text-sm text-muted-foreground" htmlFor="register-password">Senha</Label>
+            <PasswordInput
               id="register-password"
               data-testid="register-password"
-              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
               value={password}
@@ -144,11 +137,10 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
             <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres, com ao menos um número e uma letra.</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="register-confirm">Confirmar senha</Label>
-            <Input
+            <Label className="text-sm text-muted-foreground" htmlFor="register-confirm">Confirmar senha</Label>
+            <PasswordInput
               id="register-confirm"
               data-testid="register-confirm"
-              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
               value={confirm}
@@ -161,11 +153,9 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
             />
             <FieldError id="register-confirm-error">{fieldErrors.confirm}</FieldError>
           </div>
-          <Button type="submit" className="w-full" isPending={register.isPending} data-testid="register-submit">
+          <Button type="submit" className="h-12 w-full text-base max-md:h-[60px] max-md:rounded-lg" isPending={register.isPending} data-testid="register-submit">
             Criar conta
           </Button>
         </form>
-      </CardContent>
-    </Card>
   )
 }

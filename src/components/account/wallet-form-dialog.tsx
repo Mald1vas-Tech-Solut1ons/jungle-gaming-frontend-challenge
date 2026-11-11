@@ -14,7 +14,7 @@ import { FieldError } from './field-error'
 import { ETH_ADDRESS_RE, type FieldErrors } from './validators'
 
 const PROVIDERS: WalletProvider[] = ['metamask', 'coinbase', 'walletconnect', 'phantom']
-const NETWORKS: Chain[] = ['ethereum', 'polygon', 'arbitrum']
+const NETWORKS: Chain[] = ['ethereum', 'polygon', 'solana']
 
 interface WalletFormDialogProps {
   open: boolean

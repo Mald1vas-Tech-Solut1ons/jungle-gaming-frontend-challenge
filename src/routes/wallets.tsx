@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { PageHeader } from '@/components/account/page-header'
+import { Plus } from 'lucide-react'
+import { AccountLayout } from '@/components/account/account-layout'
 import { WalletCard, WalletCardSkeleton, WalletsEmptyState } from '@/components/account/wallet-card'
 import { WalletFormDialog } from '@/components/account/wallet-form-dialog'
-import { Button } from '@/components/ui/button'
 import { useWallets } from '@/hooks/use-account'
 import { getToken } from '@/lib/session'
 import type { Wallet } from '@/api/contracts'
@@ -37,37 +37,51 @@ export const Route = createFileRoute('/wallets')({
     }
 
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <PageHeader title="Carteiras" description="Gerencie as carteiras usadas para receber seus NFTs." />
+      <AccountLayout title="Carteiras">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-bold leading-tight">Carteiras</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Estas carteiras ficam disponíveis no pagamento e para receber NFTs comprados.</p>
+          </div>
           {!atLimit && (
-            <Button onClick={openCreate} data-testid="wallet-add">
-              Nova carteira
-            </Button>
+            <button
+              type="button"
+              onClick={openCreate}
+              data-testid="wallet-add"
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 text-base font-bold text-accent transition-transform duration-200 hover:translate-x-0.5"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Adicionar
+            </button>
           )}
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <WalletCardSkeleton />
-            <WalletCardSkeleton />
-          </div>
-        ) : list.length === 0 ? (
-          <WalletsEmptyState onAdd={openCreate} />
-        ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {list.map((wallet) => (
-                <WalletCard key={wallet.id} wallet={wallet} onEdit={openEdit} />
-              ))}
+        <div className="mt-6">
+          {isLoading ? (
+            <div className="space-y-3">
+              <WalletCardSkeleton />
+              <WalletCardSkeleton />
             </div>
-            {atLimit ? (
-              <p className="text-center text-xs text-muted-foreground">
-                Limite de 2 carteiras atingido. Edite uma existente para alterar os dados.
-              </p>
-            ) : null}
-          </>
-        )}
+          ) : list.length === 0 ? (
+            <WalletsEmptyState onAdd={openCreate} />
+          ) : (
+            <>
+              <ul className="space-y-3">
+                {list.map((wallet, index) => (
+                  <WalletCard key={wallet.id} wallet={wallet} index={index} onEdit={openEdit} />
+                ))}
+              </ul>
+              {atLimit ? (
+                <p className="mt-4 text-sm text-tan">Limite de 2 carteiras atingido (principal e secundária). Edite uma existente para alterar os dados.</p>
+              ) : (
+                <div className="mt-8">
+                  <h2 className="text-lg font-bold">Carteira secundária</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Você ainda não adicionou uma carteira secundária.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* `key` único por abertura força remontagem do formulário: sem isso o
             estado (label/endereço/checkbox principal) vaza entre criar e editar
@@ -79,7 +93,7 @@ export const Route = createFileRoute('/wallets')({
           wallet={editing}
           existingWallets={list}
         />
-      </div>
+      </AccountLayout>
     )
   },
 })
