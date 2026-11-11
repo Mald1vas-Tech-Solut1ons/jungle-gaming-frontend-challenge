@@ -201,7 +201,7 @@ export function CatalogPage() {
 
           <div className="min-w-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 md:mb-8">
-              <div role="tablist" aria-label="Seleção do catálogo" className="flex items-center gap-4 overflow-x-auto no-scrollbar md:gap-6">
+              <div role="tablist" aria-label="Seleção do catálogo" className="flex items-center gap-3 overflow-x-auto no-scrollbar md:gap-6">
                 {TABS.map(([value, label]) => (
                   <button
                     key={value}
@@ -211,7 +211,7 @@ export function CatalogPage() {
                     data-testid={`catalog-tab-${value}`}
                     onClick={() => changeTab(value)}
                     className={cn(
-                      'nav-underline shrink-0 cursor-pointer whitespace-nowrap pb-1 text-base transition-colors duration-200 md:text-sm',
+                      'nav-underline shrink-0 cursor-pointer whitespace-nowrap pb-1 text-[15px] transition-colors duration-200 md:text-sm',
                       tab === value ? 'font-bold text-accent' : 'text-foreground hover:text-accent',
                     )}
                   >
