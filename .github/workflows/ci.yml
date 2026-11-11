@@ -36,6 +36,20 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Imagem oficial do Playwright: Chromium, libs do sistema e fontes já vêm
+    # prontos e fixados por versão. Antes o job rodava
+    # `playwright install --with-deps`, que passa pelo apt do runner — uma
+    # falha de DNS nos mirrors do Ubuntu ("Temporary failure resolving
+    # 'security.ubuntu.com'") derrubava o job antes de qualquer teste rodar.
+    # Sem apt no caminho, o job não depende mais da saúde dos mirrors, e o
+    # conjunto de fontes deixa de variar com a imagem do runner.
+    # A tag DEVE acompanhar a versão do @playwright/test no package-lock
+    # (a etapa "Verify Playwright image" reprova se divergirem).
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: '1.65.0'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,8 +58,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Verify Playwright image matches the lockfile
+        run: |
+          installed="$(node -p "require('@playwright/test/package.json').version")"
+          if [ "$installed" != "$PLAYWRIGHT_IMAGE_VERSION" ]; then
+            echo "::error::@playwright/test $installed != imagem v$PLAYWRIGHT_IMAGE_VERSION — atualize a tag do container em ci.yml"
+            exit 1
+          fi
       - name: Build
         run: npm run build
       - name: Run E2E suite
@@ -66,7 +85,14 @@ jobs:
           retention-days: 14
       - name: Publish HTML report
         if: always()
-        run: mkdir -p public/reports && cp -r playwright-report public/reports/playwright
+        run: |
+          # Sem relatório (job caiu antes da suíte) não há o que publicar —
+          # não mascara a falha real com um segundo erro.
+          if [ -d playwright-report ]; then
+            mkdir -p public/reports && cp -r playwright-report public/reports/playwright
+          else
+            echo "::notice::playwright-report ausente — a suíte não chegou a rodar"
+          fi
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
