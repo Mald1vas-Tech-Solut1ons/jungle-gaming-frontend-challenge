@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml)
 
-![Kurio](public/logo.png)
+![Kurio](https://raw.githubusercontent.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/main/public/logo.png)
 
 Marketplace de NFTs desenvolvido como teste técnico frontend para a **Jungle Gaming**, seguindo o design do [Figma do desafio](https://www.figma.com/design/Ff0SksUi7UFtPWUO8kyNtw/Frontend-Challenge).
 
