@@ -1,5 +1,6 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import type { ApiErrorBody, ApiErrorCode } from '@/api/contracts'
+import { mocksReady } from './mocks-ready'
 import { getGuestCartId, getToken, notifySessionExpired } from './session'
 
 /**
@@ -63,7 +64,10 @@ export const api = axios.create({
   timeout: API_TIMEOUT_MS,
 })
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  // O app pinta antes do backend simulado subir; requisições esperam o MSW.
+  // (O timeout do Axios só começa a contar no envio, depois desta espera.)
+  await mocksReady
   const token = getToken()
   if (token) config.headers.set('Authorization', `Bearer ${token}`)
   else {
