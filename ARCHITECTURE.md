@@ -93,8 +93,13 @@ O backend simulado é um sistema completo e consistente em `src/mocks/`:
 
 ## 8. Desvios do Figma
 
-- **Fontes:** o design usa fontes proprietárias; a entrega usa **Space Mono** e **Press Start 2P** self-hosted via `@fontsource` (sem CDN, sem flash de fonte não estilizada) — mesma família visual, licença aberta.
-- **Imagens de NFTs:** o Figma não fornece os ativos; as 12 imagens foram **geradas localmente** em `public/nfts/` (formato quadrado, tema de macacos digitais) e cicladas deterministicamente entre os 36 NFTs (4 por NFT na galeria do detalhe).
+- **Fontes:** o design usa sem serifa geométrica proprietária; a entrega usa **Montserrat** self-hosted via `@fontsource` (400–800, sem CDN, sem flash de fonte não estilizada) — aparência equivalente à medida nos frames exportados.
+- **Identidade visual:** aplicada a paleta e a anatomia medidas por análise de pixels dos PNGs do Figma (fundo `#140D0A`, painéis `#241612`, CTA `#D28A4C`, acento de preços `#E89B55`, botões flat no desktop e gradiente horizontal `#CE874B→#B77743` nos CTAs mobile). O logotipo do Figma é reproduzido como wordmark "KURIO" em texto (sem o arquivo vetorial original).
+- **Login/Cadastro:** o Figma mostra a seção de marketplace completa abaixo do formulário; a entrega mantém o formulário focado (decisão de UX) e omite a repetição do catálogo na mesma página.
+- **Inputs:** o Figma alterna entre inputs com fill e transparentes; a entrega padroniza no estilo com fill (nota 10 do SPEC) por consistência e contraste.
+- **Imagens de NFTs:** o Figma não fornece os ativos; as 12 imagens foram **geradas localmente** em `public/nfts/` (tema de macacos digitais) e cicladas deterministicamente entre os 36 NFTs (4 por NFT na galeria do detalhe). Convertidas para **WebP** (1024px, q80) — o catálogo caiu de 7,2MB para ~1MB.
+- **Contagens da sidebar de filtros:** o Figma exibe contagens por coleção/rede; o contrato REST não expõe contagens por faceta, então a sidebar usa chips sem números (sem query extra por filtro).
+- **Confirmação de pedido:** tela standalone (sem header/footer), como no Figma.
 - **Páginas editoriais** do Figma fora do escopo funcional (sobre, blog etc.): quando referenciadas, exibem toast explicativo em vez de rota morta.
 
 ## 9. Decisões de UX

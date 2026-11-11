@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-11-11T00:46:25.638Z",
+  "baseUrl": "http://localhost:4173",
+  "runs": 3,
+  "pages": {
+    "/": {
+      "mobile": {
+        "medians": {
+          "performance": 72,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 92,
+          "lcp": 933.0048999999999,
+          "cls": 0.01201746788032614,
+          "tbt": 2040.3390249999998
+        },
+        "reports": [
+          "home-mobile-1",
+          "home-mobile-2",
+          "home-mobile-3"
+        ]
+      },
+      "desktop": {
+        "medians": {
+          "performance": 41,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 92,
+          "lcp": 5321.0908,
+          "cls": 0.052294615663273224,
+          "tbt": 1904.2386500000002
+        },
+        "reports": [
+          "home-desktop-1",
+          "home-desktop-2",
+          "home-desktop-3"
+        ]
+      }
+    },
+    "/nft/nft-001": {
+      "mobile": {
+        "medians": {
+          "performance": 52,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 92,
+          "lcp": 5391.29155,
+          "cls": 0.00003395293433983042,
+          "tbt": 1963.6749
+        },
+        "reports": [
+          "nft-detail-mobile-1",
+          "nft-detail-mobile-2",
+          "nft-detail-mobile-3"
+        ]
+      },
+      "desktop": {
+        "medians": {
+          "performance": 42,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 92,
+          "lcp": 5207.1101,
+          "cls": 0.024097669228681937,
+          "tbt": 1837.5
+        },
+        "reports": [
+          "nft-detail-desktop-1",
+          "nft-detail-desktop-2",
+          "nft-detail-desktop-3"
+        ]
+      }
+    }
+  }
+}

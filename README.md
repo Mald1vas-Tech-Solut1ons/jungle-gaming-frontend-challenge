@@ -1,5 +1,7 @@
 # Jungle Marketplace — Frontend Challenge
 
+[![CI](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml)
+
 Marketplace de NFTs desenvolvido como teste técnico frontend para a **Jungle Gaming**, seguindo o design do [Figma do desafio](https://www.figma.com/design/Ff0SksUi7UFtPWUO8kyNtw/Frontend-Challenge).
 
 A entrega roda **100% no navegador**: o backend é uma simulação completa (MSW) com estado persistente, tempo real via Socket.IO simulado e 13 cenários de falha acionáveis sem tocar em código. A demo publicada usa os mocks como backend.
@@ -235,16 +237,18 @@ Build: `npm run build` (`tsc -b && vite build`).
 
 ## Testes
 
-**Suíte Playwright (E2E + regressão visual)** — implementada na próxima onda; os comandos já existem:
+**Suíte Playwright (E2E + regressão visual)** — `e2e/*.spec.ts`, cobrindo as 12 áreas do enunciado: catálogo (busca, filtros, ordenação, paginação, histórico na URL); acesso direto ao detalhe + 404; cadastro, login, expiração, logout e troca de usuário; favoritos com falha e rollback; carrinho, cupom e persistência; compra completa até o recibo; falhas de pagamento, clique repetido e timeout idempotente; perfil, avatar, senha e carteiras; mudança de preço via socket no checkout; eventos duplicados/antigos e desconexão/reconexão; teclado, foco e validação; skeletons, erro e retry; regressão visual (início, detalhe, carrinho, pagamento) com baselines versionadas em `e2e/visual.spec.ts-snapshots/`.
 
-- `npm run test:e2e` — roda `e2e/*.spec.ts`, cobrindo as 12 áreas do enunciado: catálogo (busca, filtros, ordenação, paginação, histórico na URL); acesso direto ao detalhe + 404; cadastro, login, expiração, logout e troca de usuário; favoritos com falha e rollback; carrinho, cupom e persistência; compra completa até o recibo; falhas de pagamento, clique repetido e timeout idempotente; perfil, avatar, senha e carteiras; mudança de preço via socket no checkout; eventos duplicados/antigos e desconexão/reconexão; teclado, foco e validação; regressão visual (início, detalhe, carrinho, pagamento) com baselines versionadas.
+- `npm run test:e2e` — roda a suíte completa (desktop 1440×900 + mobile 390×844).
 - `npm run test:e2e:ui` — modo interativo (debug).
 - `npm run test:visual:update` — regenera baselines visuais.
 - Relatório HTML em `playwright-report/` após cada execução.
+- **Relatório publicado por link**: uma cópia do relatório HTML fica em `/reports/playwright/` na demo (gerada pelo CI e committada após cada rodada).
 
 ## Auditoria Lighthouse
 
-- `npm run audit:lighthouse` — auditoria de `/` e `/nft/nft-001` em perfis mobile e desktop, 3 medições por página/perfil, mediana por categoria. Metas: Performance ≥ 90, Acessibilidade ≥ 95, Boas práticas ≥ 95, SEO ≥ 90. Relatórios HTML/JSON versionados (script `scripts/lighthouse.mjs`, próxima onda).
+- `npm run audit:lighthouse` — auditoria de `/` e `/nft/nft-001` em perfis mobile e desktop, 3 medições por página/perfil, mediana por categoria. Metas: Performance ≥ 90, Acessibilidade ≥ 95, Boas práticas ≥ 95, SEO ≥ 90.
+- Relatórios HTML/JSON versionados em `public/reports/lighthouse/` + `summary.json` com as medianas — **publicados por link** em `/reports/lighthouse/` na demo.
 
 ## Documentação complementar
 
