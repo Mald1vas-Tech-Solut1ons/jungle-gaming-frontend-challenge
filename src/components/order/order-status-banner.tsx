@@ -15,14 +15,15 @@ interface OrderStatusBannerProps {
 export function OrderStatusBanner({ status, rejectionReason }: OrderStatusBannerProps) {
   return (
     <div
+      key={status}
       data-testid="order-status"
       role="status"
       aria-live="polite"
       className={cn(
-        'rounded-lg border px-4 py-3',
-        status === 'pending' && 'border-warning/50 bg-warning/10 text-warning',
-        status === 'confirmed' && 'border-success/50 bg-success/10 text-success',
-        status === 'rejected' && 'border-destructive/50 bg-destructive/10 text-destructive',
+        'animate-fade rounded-md border-l-4 px-4 py-3 text-left',
+        status === 'pending' && 'border-warning bg-warning/10 text-warning',
+        status === 'confirmed' && 'border-success bg-success/10 text-success',
+        status === 'rejected' && 'border-destructive bg-destructive/10 text-destructive',
       )}
     >
       <div className="flex items-start gap-3">
@@ -38,7 +39,7 @@ export function OrderStatusBanner({ status, rejectionReason }: OrderStatusBanner
         <div className="min-w-0">
           {status === 'pending' && (
             <>
-              <p className="font-semibold">Aguardando confirmação na rede…</p>
+              <p className="font-bold">Aguardando confirmação na rede…</p>
               <p className="mt-1 text-xs opacity-80">
                 O pagamento está sendo processado pela carteira. Esta página será atualizada automaticamente.
               </p>
@@ -46,13 +47,13 @@ export function OrderStatusBanner({ status, rejectionReason }: OrderStatusBanner
           )}
           {status === 'confirmed' && (
             <>
-              <p className="font-semibold">Pedido confirmado na rede!</p>
+              <p className="font-bold">Pedido confirmado na rede!</p>
               <p className="mt-1 text-xs opacity-80">A transação foi registrada na blockchain. Recibo abaixo.</p>
             </>
           )}
           {status === 'rejected' && (
             <>
-              <p className="font-semibold">Pagamento recusado</p>
+              <p className="font-bold">Pagamento recusado</p>
               <p className="mt-1 text-xs opacity-80">{rejectionReason ?? 'Não foi possível concluir o pagamento.'}</p>
             </>
           )}

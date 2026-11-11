@@ -1,106 +1,135 @@
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import type { Order } from '@/api/contracts'
+import { compareEth, formatEth } from '@/lib/money'
 import { CHAIN_LABELS, WALLET_PROVIDER_LABELS } from '@/lib/labels'
-import { formatEth } from '@/lib/money'
+
+const dateFormat = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 
 /**
  * Recibo do pedido: snapshot imutável salvo na criação (linhas, subtotal,
- * desconto, taxa, total, colecionador e carteira). NUNCA recalcula valores
- * a partir do catálogo atual.
+ * desconto, taxa, total, colecionador e carteira). NUNCA recalcula valores a
+ * partir do catálogo atual — mudanças de preço posteriores não o alteram.
  */
 export function OrderReceipt({ order }: { order: Order }) {
+  const hasDiscount = compareEth(order.discount, '0') > 0
+
   return (
-    <div data-testid="order-receipt" className="space-y-6">
-      {order.status === 'confirmed' && order.txHash && (
-        <div className="rounded-lg border border-success/40 bg-success/10 p-4">
-          <p className="text-xs uppercase tracking-wider text-success">Transação</p>
-          <p data-testid="order-tx" className="mt-1 break-all font-mono text-xs text-foreground">
-            {order.txHash}
-          </p>
-          {order.explorerUrl && (
-            <a
-              href={order.explorerUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-block text-xs text-primary underline underline-offset-4 hover:text-accent"
-            >
-              Ver transação no explorador →
-            </a>
-          )}
+    <div data-testid="order-receipt">
+      {/* Faixa de resumo: transação · data · total · carteira */}
+      <dl className="grid grid-cols-2 gap-y-4 border-y border-primary px-6 py-4 text-sm sm:grid-cols-4 sm:px-9">
+        <div className="min-w-0 pr-3">
+          <dt className="font-bold text-muted-foreground">ID da transação</dt>
+          <dd className="mt-0.5 flex items-center gap-1.5 text-muted-foreground">
+            {order.txHash ? (
+              <>
+                <span data-testid="order-tx" title={order.txHash} className="block max-w-[10.5ch] truncate">
+                  {order.txHash}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Copiar ID da transação"
+                  className="cursor-pointer text-tan transition-colors duration-200 hover:text-accent"
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(order.txHash!)
+                      .then(() => toast.success('ID da transação copiado.'))
+                      .catch(() => toast.error('Não foi possível copiar.'))
+                  }}
+                >
+                  <Copy className="size-3.5" aria-hidden="true" />
+                </button>
+              </>
+            ) : (
+              <span className="italic">Aguardando rede…</span>
+            )}
+          </dd>
         </div>
-      )}
+        <div className="sm:border-l sm:border-primary sm:pl-4">
+          <dt className="text-muted-foreground">Data</dt>
+          <dd className="mt-0.5 text-muted-foreground">{dateFormat.format(new Date(order.createdAt))}</dd>
+        </div>
+        <div className="sm:border-l sm:border-primary sm:pl-4">
+          <dt className="text-muted-foreground">Total</dt>
+          <dd className="mt-0.5 text-muted-foreground">{formatEth(order.total)}</dd>
+        </div>
+        <div className="min-w-0 sm:border-l sm:border-primary sm:pl-4">
+          <dt className="font-bold text-muted-foreground">Carteira</dt>
+          <dd className="mt-0.5 truncate text-muted-foreground" title={order.wallet.address}>
+            {order.wallet.label} · {WALLET_PROVIDER_LABELS[order.wallet.provider]}
+          </dd>
+        </div>
+      </dl>
 
-      <section aria-label="Itens do pedido">
-        <h2 className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Itens</h2>
-        <ul className="space-y-3">
-          {order.lines.map((line) => (
-            <li key={`${line.nftId}:${line.editionId}`} className="flex items-center gap-3">
-              <img src={line.image} alt={line.name} className="size-12 shrink-0 rounded-md border border-border object-cover" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{line.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {line.editionName} · {line.quantity}× {formatEth(line.unitPrice)}
-                </p>
-              </div>
-              <span className="whitespace-nowrap text-sm text-foreground">{formatEth(line.lineTotal)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <section aria-labelledby="receipt-details" className="px-6 pt-6 sm:px-11">
+        <h2 id="receipt-details" className="text-base font-bold">
+          Detalhes da transação
+        </h2>
+        <table className="mt-3 w-full text-left">
+          <caption className="sr-only">Itens comprados</caption>
+          <thead>
+            <tr className="border-b border-rule text-base">
+              <th scope="col" className="pb-2 font-bold">
+                NFTs
+              </th>
+              <th scope="col" className="pb-2 text-center font-bold">
+                Edições
+              </th>
+              <th scope="col" className="pb-2 text-right font-bold">
+                Subtotal
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.lines.map((line) => (
+              <tr key={`${line.nftId}:${line.editionId}`}>
+                <td className="py-2">
+                  <div className="flex items-center gap-3">
+                    <img src={line.image} alt="" width={140} height={140} className="size-[66px] shrink-0 rounded-sm object-cover" />
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-bold">{line.name}</p>
+                      <p className="truncate text-sm text-tan">Edição: {line.editionName}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-2 text-center text-sm text-muted-foreground">(x {line.quantity})</td>
+                <td className="whitespace-nowrap py-2 text-right text-lg font-bold text-accent">{formatEth(line.lineTotal)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <Separator />
-
-      <section aria-label="Valores do pedido">
-        <h2 className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Valores</h2>
-        <dl className="space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">Subtotal</dt>
+        <dl className="ml-auto mt-3 flex max-w-xs flex-col gap-1.5 border-b border-rule pb-3 text-base">
+          <div className="flex justify-between gap-6">
+            <dt>Subtotal</dt>
             <dd>{formatEth(order.subtotal)}</dd>
           </div>
-          <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">
-              Desconto{order.coupon ? ` (${order.coupon.code} −${order.coupon.percentOff}%)` : ''}
-            </dt>
-            <dd className={order.coupon ? 'text-success' : undefined}>
-              {order.coupon ? `−${formatEth(order.discount)}` : formatEth(order.discount)}
-            </dd>
-          </div>
-          <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">Taxa de rede ({CHAIN_LABELS[order.network]})</dt>
+          {hasDiscount && (
+            <div className="flex justify-between gap-6">
+              <dt>Desconto{order.coupon ? ` (${order.coupon.code})` : ''}</dt>
+              <dd className="text-success">−{formatEth(order.discount)}</dd>
+            </div>
+          )}
+          <div className="flex justify-between gap-6">
+            <dt>Taxa de rede</dt>
             <dd>{formatEth(order.networkFee)}</dd>
           </div>
-          <Separator />
-          <div className="flex items-center justify-between text-base font-semibold">
+          <div className="flex justify-between gap-6 font-bold">
             <dt>Total</dt>
-            <dd className="text-primary">{formatEth(order.total)}</dd>
+            <dd data-testid="receipt-total" className="text-lg text-accent">
+              {formatEth(order.total)}
+            </dd>
           </div>
         </dl>
+
+        <p className="mx-auto mt-4 max-w-md text-center text-sm leading-[1.7] text-muted-foreground">
+          Pedido de <strong className="font-bold text-foreground">{order.collector.fullName}</strong> (@{order.collector.username}) na{' '}
+          {CHAIN_LABELS[order.network]}. A propriedade é transferida para a carteira conectada e registrada na rede.
+        </p>
+        {order.collector.note && (
+          <p className="mx-auto mt-2 max-w-md text-center text-xs italic text-tan">“{order.collector.note}”</p>
+        )}
       </section>
-
-      <Separator />
-
-      <div className="grid gap-6 sm:grid-cols-2">
-        <section aria-label="Dados do colecionador">
-          <h2 className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Colecionador</h2>
-          <div className="space-y-1 text-sm">
-            <p className="font-medium text-foreground">{order.collector.fullName}</p>
-            <p className="text-muted-foreground">{order.collector.email}</p>
-            <p className="text-muted-foreground">{order.collector.country}</p>
-            {order.collector.document && <p className="text-muted-foreground">{order.collector.document}</p>}
-          </div>
-        </section>
-        <section aria-label="Carteira">
-          <h2 className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Carteira</h2>
-          <div className="space-y-1 text-sm">
-            <p className="flex items-center gap-2 font-medium text-foreground">
-              {order.wallet.label}
-              <Badge variant="outline">{WALLET_PROVIDER_LABELS[order.wallet.provider]}</Badge>
-            </p>
-            <p className="break-all font-mono text-xs text-muted-foreground">{order.wallet.address}</p>
-          </div>
-        </section>
-      </div>
     </div>
   )
 }
