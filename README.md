@@ -6,6 +6,8 @@
 
 Marketplace de NFTs desenvolvido como teste técnico frontend para a **Jungle Gaming**, seguindo o design do [Figma do desafio](https://www.figma.com/design/Ff0SksUi7UFtPWUO8kyNtw/Frontend-Challenge).
 
+🎥 **[Vídeo de demonstração — 2 min](https://youtu.be/lqO7BLUnEsY)**: os cenários de falha usados de ponta a ponta no sistema publicado, com narração.
+
 A entrega roda **100% no navegador**: o backend é uma simulação completa (MSW) com estado persistente, tempo real via Socket.IO simulado e 14 cenários de falha acionáveis sem tocar em código. A demo publicada usa os mocks como backend.
 
 ## Stack
@@ -249,7 +251,7 @@ Build: `npm run build` (`tsc -b && vite build`).
 - `npm run test:visual:update` — regenera baselines visuais.
 - Relatório HTML em `playwright-report/` após cada execução.
 - **Relatório publicado por link**: uma cópia do relatório HTML fica em `/reports/playwright/` na demo (gerada pelo CI e committada após cada rodada).
-- **Vídeos de demonstração**: gravações de cada cenário de simulação em `/videos-demo/` na demo (abertura, filtros na URL, rede lenta, preço mudando no checkout, clique duplo/timeout, queda do tempo real, evento duplicado/antigo, desconexão da carteira) — para o avaliador ver os diferenciais sem instalar nada.
+- **Vídeo de demonstração**: [2 min no YouTube](https://youtu.be/lqO7BLUnEsY) mostrando cada cenário de simulação em uso real — filtros na URL, rede lenta, preço mudando no checkout, clique duplo com timeout, queda do tempo real, evento duplicado/antigo e isolamento entre usuários — para o avaliador ver os diferenciais sem instalar nada.
 
 ## Auditoria Lighthouse
 

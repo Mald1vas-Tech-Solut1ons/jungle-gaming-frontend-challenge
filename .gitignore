@@ -37,3 +37,6 @@ scripts/.lh-progress.log
 
 # Ferramentas locais (worktrees/preview do Claude Code)
 .claude/
+
+# Vídeos de demonstração: publicados no YouTube, não no repositório
+public/videos-demo/
