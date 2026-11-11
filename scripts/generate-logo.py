@@ -58,7 +58,7 @@ parts.append(f'<circle cx="{PAD+MARK/2}" cy="{H/2}" r="{r*0.42:.1f}" fill="{ORAN
 baseline = (H + TARGET_CAP) / 2
 for i, (d, gx) in enumerate(units):
     tx = PAD + MARK + GAP + gx * scale
-    parts.append(f'<path fill="{GLYPH_FILLS[i]}" transform="translate({tx:.2f} {baseline:.2f}) scale({scale:.4f})" d="{d}"/>')
+    parts.append(f'<path fill="{GLYPH_FILLS[i]}" transform="translate({tx:.2f} {baseline:.2f}) scale({scale:.4f} -{scale:.4f})" d="{d}"/>')
 
 svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.1f} {H}" role="img" aria-label="Kurio">' + ''.join(parts) + '</svg>'
 with open(OUT, 'w', encoding='utf-8') as f:
