@@ -21,7 +21,8 @@ A entrega roda **100% no navegador**: o backend é uma simulação completa (MSW
 | Dinheiro | `decimal.js` (ETH como strings decimais) |
 | Validação | zod |
 | Build | Vite 8 |
-| Qualidade | oxlint, Playwright e Lighthouse (suíte E2E/auditoria na próxima onda — comandos já presentes) |
+| Qualidade | oxlint, Playwright (E2E + regressão visual, desktop/tablet/mobile) e Lighthouse (mobile e desktop) |
+| Tipografia | Roboto Mono (família do Figma) self-hosted via `@fontsource-variable` |
 
 Requisitos: **Node.js ≥ 20** (desenvolvido com Node 24) e **npm**.
 
@@ -98,10 +99,10 @@ Cenários marcados "uma vez" disparam apenas na primeira ocorrência dentro do c
 | `npm run typecheck` | Checagem de tipos (`tsc -b`) |
 | `npm run lint` | Lint com oxlint |
 | `npm run preview` | Serve o build de produção localmente |
-| `npm run test:e2e` | Suíte Playwright (próxima onda — ver seção Testes) |
+| `npm run test:e2e` | Suíte Playwright completa contra o build (`npm run build` antes). Porta do preview: `E2E_PORT` (padrão 4173) |
 | `npm run test:e2e:ui` | Playwright em modo UI |
 | `npm run test:visual:update` | Atualiza baselines visuais (`playwright test --update-snapshots`) |
-| `npm run audit:lighthouse` | Auditoria Lighthouse (`node scripts/lighthouse.mjs` — próxima onda) |
+| `npm run audit:lighthouse` | Auditoria Lighthouse (`scripts/lighthouse.mjs`): `/` e `/nft/nft-001`, perfis mobile e desktop (preset oficial), 3 medições, mediana |
 
 ## Reproduzindo fluxos de falha
 
@@ -206,7 +207,7 @@ Envelope único (tipado em `src/api/contracts.ts`): `{ eventId, type, resource: 
 ## Estrutura de pastas
 
 ```
-├── public/               # mockServiceWorker.js, imagens de NFTs (/nfts/*.jpg), favicon
+├── public/               # mockServiceWorker.js, imagens de NFTs (/nfts/*.webp), favicon, robots.txt
 ├── src/
 │   ├── api/contracts.ts  # Tipos compartilhados REST + eventos (única fonte de verdade app ↔ mock)
 │   ├── mocks/            # Backend simulado MSW
@@ -219,10 +220,11 @@ Envelope único (tipado em `src/api/contracts.ts`): `{ eventId, type, resource: 
 │   ├── lib/              # api (Axios), query-client, socket, session, money (decimal.js), scenario, labels, utils
 │   ├── hooks/            # use-nfts, use-cart, use-order, use-session, use-account
 │   ├── components/ui/    # Componentes shadcn/ui adaptados (Button, Dialog, Skeleton…)
-│   ├── components/layout/# Header, Footer, 404, Painel de Simulação, toasts de tempo real
+│   ├── components/layout/# Header, Footer, barra inferior e barras de topo mobile, 404, Painel de Simulação, toasts
+│   ├── components/<tela>/# catalog, nft, cart, checkout, order, account — uma pasta por fluxo do Figma
 │   └── routes/           # Rotas file-based: /, /nft/$nftId, /cart, /checkout, /orders/$orderId, /login, /register, /profile, /wallets
-├── e2e/                  # Suíte Playwright (próxima onda — ver Testes)
-├── scripts/lighthouse.mjs# Auditoria Lighthouse (próxima onda)
+├── e2e/                  # Suíte Playwright (12 áreas + visual) e baselines em e2e/snapshots/
+├── scripts/lighthouse.mjs# Auditoria Lighthouse (relatórios em public/reports/lighthouse/)
 ├── .env.example
 └── vercel.json           # Deploy SPA + header para o service worker do MSW
 ```
@@ -252,6 +254,8 @@ Build: `npm run build` (`tsc -b && vite build`).
 
 - `npm run audit:lighthouse` — auditoria de `/` e `/nft/nft-001` em perfis mobile e desktop, 3 medições por página/perfil, mediana por categoria. Metas: Performance ≥ 90, Acessibilidade ≥ 95, Boas práticas ≥ 95, SEO ≥ 90.
 - Relatórios HTML/JSON versionados em `public/reports/lighthouse/` + `summary.json` com as medianas — **publicados por link** em `/reports/lighthouse/` na demo.
+- Resultado atual (medianas): **desktop** Perf 98–99 · A11y 100 · BP 100 · SEO 100; **mobile** Perf 71–75 · A11y 100 · BP 100 · SEO 100. A performance mobile abaixo da meta é analisada em [ARCHITECTURE.md §11](./ARCHITECTURE.md) (LCP depende dos dados do backend simulado que roda no navegador).
+- Porta do preview usado pela auditoria e pelos testes: 4173 (`E2E_PORT` muda a dos testes).
 
 ## Documentação complementar
 

@@ -70,7 +70,7 @@ Evidência: `src/mocks/browser.ts:13-28`, `src/mocks/realtime.ts:12-14`, `src/ap
 - **Não** diga que o tempo real é um servidor Socket.IO de verdade — o `@mswjs/socket.io-binding` fala o protocolo dentro da aba; só transporte `websocket`, estado por aba.
 - **Não** diga que o carrinho sobrevive a limpeza de `localStorage` ou que funciona entre abas — persistência é por aba.
 - **Não** diga que favoritos/pedidos de um usuário são protegidos por autorização real no servidor — o isolamento é simulado (404 para pedido alheio, eventos privados por `userId` na conexão).
-- **Não** diga que o design usa as fontes exatas do Figma — Space Mono/Press Start 2P são a adaptação self-hosted documentada em `ARCHITECTURE.md` §8.
+- A fonte é a do Figma (Roboto Mono), servida localmente via `@fontsource-variable` — sem CDN. Desvios de layout estão listados em `ARCHITECTURE.md` §8.
 - **Não** diga que as imagens dos NFTs vieram do Figma — foram geradas localmente em `public/nfts/`.
 
 ## Evidências rápidas (mapa arquivo:linha)

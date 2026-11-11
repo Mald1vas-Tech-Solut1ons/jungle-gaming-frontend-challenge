@@ -34,3 +34,6 @@ reports/local
 
 .vercel
 scripts/.lh-progress.log
+
+# Ferramentas locais (worktrees/preview do Claude Code)
+.claude/
