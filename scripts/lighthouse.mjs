@@ -12,24 +12,38 @@
  * (`npx playwright install chromium`).
  */
 import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import lighthouse from 'lighthouse'
 import { launch } from 'chrome-launcher'
 
+const PROGRESS_LOG = join(dirname(fileURLToPath(import.meta.url)), '.lh-progress.log')
+const step = (msg) => {
+  try {
+    appendFileSync(PROGRESS_LOG, `[${new Date().toISOString()}] ${msg}\n`)
+  } catch {
+    /* log best-effort */
+  }
+  console.log(msg)
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const OUT_DIR = join(ROOT, 'public', 'reports', 'lighthouse')
 const BASE_URL = process.env.LH_BASE_URL ?? 'http://localhost:4173'
 const PORT = 4173
-const RUNS = 3
+// Fragmentável: LH_RUNS=2 LH_PAGES=nft-detail LH_PROFILES=mobile roda só um
+// recorte (auditorias longas em memória limitada) e mescla no summary.json.
+const RUNS = Number(process.env.LH_RUNS ?? 3)
+const PAGE_FILTER = process.env.LH_PAGES?.split(',').map((s) => s.trim()).filter(Boolean)
+const PROFILE_FILTER = process.env.LH_PROFILES?.split(',').map((s) => s.trim()).filter(Boolean)
 
 const PAGES = [
   { name: 'home', path: '/' },
   { name: 'nft-detail', path: '/nft/nft-001' },
-]
+].filter((p) => !PAGE_FILTER?.length || PAGE_FILTER.includes(p.name))
 
 const PROFILES = {
   mobile: {
@@ -47,6 +61,8 @@ const PROFILES = {
     throttlingMethod: 'devtools',
   },
 }
+
+const ALL_PROFILES = Object.entries(PROFILES).filter(([id]) => !PROFILE_FILTER?.length || PROFILE_FILTER.includes(id))
 
 // ---------------- Executável do Chromium (Playwright) ----------------
 
@@ -154,31 +170,37 @@ async function auditOnce(chrome, page, profileId) {
 
 const chromePath = findPlaywrightChrome()
 if (!chromePath) {
-  console.error('✗ Chromium do Playwright não encontrado. Rode: npx playwright install chromium')
+  step('✗ Chromium do Playwright não encontrado. Rode: npx playwright install chromium')
   process.exit(1)
 }
-console.log(`Chromium: ${chromePath}`)
+step(`Chromium: ${chromePath}`)
 
 mkdirSync(OUT_DIR, { recursive: true })
 
 const server = await ensureServer()
 let chrome = null
-const summary = { generatedAt: new Date().toISOString(), baseUrl: BASE_URL, runs: RUNS, pages: {} }
+const summaryPath = join(OUT_DIR, 'summary.json')
+const summary = existsSync(summaryPath)
+  ? JSON.parse(readFileSync(summaryPath, 'utf8'))
+  : { generatedAt: new Date().toISOString(), baseUrl: BASE_URL, runs: RUNS, pages: {} }
+summary.generatedAt = new Date().toISOString()
+summary.baseUrl = BASE_URL
 
 try {
+  step('Iniciando Chrome…')
   chrome = await launch({
     chromePath,
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
   })
-  console.log(`Chrome pronto na porta ${chrome.port}\n`)
+  step(`Chrome pronto na porta ${chrome.port}`)
 
   for (const page of PAGES) {
-    summary.pages[page.path] = {}
-    for (const [profileId] of Object.entries(PROFILES)) {
+    summary.pages[page.path] ??= {}
+    for (const [profileId] of ALL_PROFILES) {
       const collected = { categories: {}, metrics: {} }
       const reportList = []
       for (let run = 1; run <= RUNS; run++) {
-        process.stdout.write(`▶ ${page.path} [${profileId}] ${run}/${RUNS} … `)
+        step(`▶ ${page.path} [${profileId}] ${run}/${RUNS}`)
         const started = Date.now()
         const result = await auditOnce(chrome, page, profileId)
         const lhr = result.lhr
@@ -190,7 +212,7 @@ try {
         writeFileSync(join(OUT_DIR, `${baseName}.json`), result.report[0])
         writeFileSync(join(OUT_DIR, `${baseName}.html`), result.report[1])
         reportList.push(baseName)
-        console.log(`${Math.round((Date.now() - started) / 1000)}s · perf=${s.categories.performance}`)
+        step(`${Math.round((Date.now() - started) / 1000)}s · perf=${s.categories.performance}`)
       }
 
       const medians = {}
@@ -200,7 +222,7 @@ try {
     }
   }
 
-  writeFileSync(join(OUT_DIR, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`)
+  writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`)
 } finally {
   try {
     if (chrome) await chrome.kill()
@@ -213,8 +235,10 @@ try {
 // ---------------- Relatório final ----------------
 
 console.log('\n========== MEDIANAS (3 medições por página/perfil) ==========')
+const REPORT_PROFILES = Object.keys(PROFILES)
 for (const page of PAGES) {
-  for (const profileId of Object.keys(PROFILES)) {
+  for (const profileId of REPORT_PROFILES) {
+    if (!summary.pages[page.path]?.[profileId]) continue
     const { medians } = summary.pages[page.path][profileId]
     const row = [
       page.path.padEnd(14),
@@ -236,7 +260,8 @@ console.log(`\nRelatórios: ${OUT_DIR}`)
 const GOALS = { performance: 90, accessibility: 95, 'best-practices': 95, seo: 90 }
 let failed = false
 for (const page of PAGES) {
-  for (const profileId of Object.keys(PROFILES)) {
+  for (const profileId of REPORT_PROFILES) {
+    if (!summary.pages[page.path]?.[profileId]) continue
     const { medians } = summary.pages[page.path][profileId]
     for (const [cat, goal] of Object.entries(GOALS)) {
       if (medians[cat] < goal) {

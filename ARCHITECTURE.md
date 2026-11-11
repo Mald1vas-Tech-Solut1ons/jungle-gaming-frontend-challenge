@@ -128,21 +128,21 @@ O desenho de contratos (strings para ETH, envelope de eventos com `eventId`/`ver
 
 ## 11. Resultados da auditoria Lighthouse
 
-Mediana de 3 medições por página/perfil, contra o build otimizado (`vite build` + `vite preview`), cenário padrão dos mocks, Chromium 158 via Playwright. Relatórios HTML/JSON versionados em `public/reports/lighthouse/` (publicados em `/reports/lighthouse/` na demo) e `summary.json` com as medianas.
+Mediana de 3 medições por página/perfil, contra o build otimizado (`vite build` + `vite preview`), cenário padrão dos mocks, Chromium instalado pelo Playwright. Relatórios HTML/JSON versionados em `public/reports/lighthouse/` (publicados em `/reports/lighthouse/` na demo) e `summary.json` com as medianas.
 
 | Página | Perfil | Perf | A11y | BP | SEO | LCP | CLS | TBT |
 |---|---|---|---|---|---|---|---|---|
-| `/` | mobile | 72 | 100 | 100 | 92 | 0,93s | 0,02 | 2,0s |
-| `/` | desktop | 41 | 100 | 100 | 92 | 5,3s | 0,00 | 1,9s |
-| `/nft/nft-001` | mobile | 52 | 100 | 100 | 92 | 5,4s | 0,00 | 1,9s |
-| `/nft/nft-001` | desktop | 42 | 100 | 100 | 92 | 5,2s | 0,00 | 1,8s |
+| `/` | mobile | 72 | 100 | 100 | 92 | 1,01s | 0,01 | 1,36s |
+| `/` | desktop | 26 | 100 | 100 | 92 | 9,31s | 0,00 | 1,36s |
+| `/nft/nft-001` | mobile | 55 | 100 | 100 | 92 | 5,64s | 0,00 | 1,18s |
+| `/nft/nft-001` | desktop | 26 | 100 | 100 | 92 | 10,15s | 0,00 | 1,16s |
 
 **Metas:** Performance ≥ 90 ✗ · Acessibilidade ≥ 95 ✓ · Boas práticas ≥ 95 ✓ · SEO ≥ 90 ✓.
 
 **Análise das metas não atingidas (Performance):**
 
-1. **LCP simulado vs observado:** na execução sem throttling de rede/CPU, o LCP observado do desktop é **~1,4s** — os elementos críticos (mascote do hero, primeiro card) carregam com `fetchpriority=high` e imagens WebP de 40–80KB. O valor de ~5,3s aparece **apenas na simulação Lantern (4× CPU + 1,6Mbps)** e é dominado pelo **parse/execução do bundle do MSW + app no primeiro paint** (o backend da demo é o próprio cliente; `bootup-time` medido 4,4s na máquina de referência).
-2. **TBT ~1,8–2,0s:** principal contribuinte é o script evaluation do bundle de mocks (469KB min / ~172KB gzip — MSW, handlers, fixtures e o binding Socket.IO) + app (429KB min / ~135KB gzip). É o custo obrigatório da arquitetura exigida pelo desafio (mocks na camada de rede + Socket.IO simulado rodando no cliente); em produção com backend real, `VITE_ENABLE_MOCKS=false` elimina o chunk inteiro.
+1. **LCP simulado vs observado:** na execução sem throttling de rede/CPU, o LCP observado do desktop é **~1,4s** — os elementos críticos (mascote do hero, primeiro card) carregam com `fetchpriority=high` e imagens WebP de 40–80KB. Os valores de 5,6–10,2s aparecem **apenas sob throttling** (mobile: Lantern 4× CPU + 1,6Mbps; desktop: throttling real via CDP) e são dominados pelo **parse/execução do bundle do MSW + app no primeiro paint** (o backend da demo é o próprio cliente; o custo de script evaluation escala linearmente com a penalidade de CPU simulada, daí o desktop-devTools ser o pior caso).
+2. **TBT ~1,2–1,4s:** principal contribuinte é o script evaluation do bundle de mocks (469KB min / ~172KB gzip — MSW, handlers, fixtures e o binding Socket.IO) + app (429KB min / ~135KB gzip). É o custo obrigatório da arquitetura exigida pelo desafio (mocks na camada de rede + Socket.IO simulado rodando no cliente); em produção com backend real, `VITE_ENABLE_MOCKS=false` elimina o chunk inteiro.
 3. **CLS ~0** em todas as páginas/perfis (dimensões fixas nos cards, skeletons preservando layout) e **A11y 100** — as dimensões que dependem de engenharia estão no teto; a perda de Performance está concentrada na penalidade de CPU simulada sobre o código do backend simulado, não em carregamento de ativos.
 
 **O que foi feito para mitigar (sem trapaça):** imagens WebP 1024px/q80 (7,2MB → ~1MB), `fetchpriority=high` + eager no primeiro conteúdo, preload do mascote no HTML, fontes self-hosted com `font-display: swap`, socket conectando em idle (não bloqueia o primeiro paint), AbortSignal em todas as queries. A auditoria roda sobre a página real com os mocks ativos — nenhuma simplificação exclusiva para pontuação.

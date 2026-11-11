@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T00:46:25.638Z",
+  "generatedAt": "2026-11-11T02:04:28.166Z",
   "baseUrl": "http://localhost:4173",
   "runs": 3,
   "pages": {
@@ -10,9 +10,9 @@
           "accessibility": 100,
           "best-practices": 100,
           "seo": 92,
-          "lcp": 933.0048999999999,
-          "cls": 0.01201746788032614,
-          "tbt": 2040.3390249999998
+          "lcp": 1012.2743,
+          "cls": 0.01183657244146957,
+          "tbt": 1358.999999999999
         },
         "reports": [
           "home-mobile-1",
@@ -22,13 +22,13 @@
       },
       "desktop": {
         "medians": {
-          "performance": 41,
+          "performance": 26,
           "accessibility": 100,
           "best-practices": 100,
           "seo": 92,
-          "lcp": 5321.0908,
-          "cls": 0.052294615663273224,
-          "tbt": 1904.2386500000002
+          "lcp": 9308.147,
+          "cls": 0.002336958375070502,
+          "tbt": 1360.884
         },
         "reports": [
           "home-desktop-1",
@@ -40,13 +40,13 @@
     "/nft/nft-001": {
       "mobile": {
         "medians": {
-          "performance": 52,
+          "performance": 55,
           "accessibility": 100,
           "best-practices": 100,
           "seo": 92,
-          "lcp": 5391.29155,
-          "cls": 0.00003395293433983042,
-          "tbt": 1963.6749
+          "lcp": 5643.3248,
+          "cls": 0,
+          "tbt": 1175.3503
         },
         "reports": [
           "nft-detail-mobile-1",
@@ -56,13 +56,13 @@
       },
       "desktop": {
         "medians": {
-          "performance": 42,
+          "performance": 26,
           "accessibility": 100,
           "best-practices": 100,
           "seo": 92,
-          "lcp": 5207.1101,
-          "cls": 0.024097669228681937,
-          "tbt": 1837.5
+          "lcp": 10145.506,
+          "cls": 0,
+          "tbt": 1161.5010000000002
         },
         "reports": [
           "nft-detail-desktop-1",
