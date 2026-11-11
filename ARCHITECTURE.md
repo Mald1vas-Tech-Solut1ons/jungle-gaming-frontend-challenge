@@ -146,3 +146,7 @@ Mediana de 3 medições por página/perfil, contra o build otimizado (`vite buil
 3. **CLS ~0** em todas as páginas/perfis (dimensões fixas nos cards, skeletons preservando layout) e **A11y 100** — as dimensões que dependem de engenharia estão no teto; a perda de Performance está concentrada na penalidade de CPU simulada sobre o código do backend simulado, não em carregamento de ativos.
 
 **O que foi feito para mitigar (sem trapaça):** imagens WebP 1024px/q80 (7,2MB → ~1MB), `fetchpriority=high` + eager no primeiro conteúdo, preload do mascote no HTML, fontes self-hosted com `font-display: swap`, socket conectando em idle (não bloqueia o primeiro paint), AbortSignal em todas as queries. A auditoria roda sobre a página real com os mocks ativos — nenhuma simplificação exclusiva para pontuação.
+
+## 12. Regressão visual cross-platform
+
+As baselines visuais (Playwright) são geradas no Windows e o CI executa em Linux: a rasterização do texto (Montserrat self-hosted) difere ~1% dos pixels entre sistemas, mesmo com a mesma fonte embutida. Os testes visuais usam `maxDiffPixelRatio: 0.02` (2%) — tolera essa variância de antialiasing e continua reprovando regressões estruturais (layout quebrado, cor trocada, elemento ausente), que movem dezenas de % dos pixels. Regeneração: `npm run test:visual:update`; baseline por plataforma é evitada por `snapshotPathTemplate` fixo (`e2e/snapshots/{arg}`).
