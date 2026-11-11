@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { Link } from '@tanstack/react-router'
+import { CheckoutBreadcrumb } from '@/components/checkout/checkout-breadcrumb'
+import { MobileTopBar } from '@/components/layout/mobile-top-bar'
+import { NftRail } from '@/components/nft/nft-rail'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApplyCoupon, useCart, useRemoveCartItem, useRemoveCoupon, useUpdateCartItem } from '@/hooks/use-cart'
+import { useIsMobile } from '@/hooks/use-media-query'
 import { useQuote } from '@/hooks/use-order'
 import { normalizeError } from '@/lib/api'
 import { CartCouponForm } from './cart-coupon-form'
 import { CartEmptyState } from './cart-empty-state'
 import { CartItemCard } from './cart-item-card'
-import { CartSummary } from './cart-summary'
+import { CartTotals, CheckoutCta } from './cart-summary'
 
 export function CartPage() {
+  const isMobile = useIsMobile()
   const { data: cart, isLoading, error, refetch } = useCart()
-  const { quote, requestQuote, isPending: quotePending } = useQuote()
+  const { quote, requestQuote } = useQuote()
   const updateItem = useUpdateCartItem()
   const removeItem = useRemoveCartItem()
   const applyCoupon = useApplyCoupon()
@@ -47,21 +52,23 @@ export function CartPage() {
 
   const updatingItemId = updateItem.isPending ? updateItem.variables?.itemId : null
   const removingItemId = removeItem.isPending ? removeItem.variables : null
+  const blocked = items.some((item) => item.available === 0 || item.quantity > item.available)
 
-  if (isLoading && !cart) return <CartPageSkeleton />
+  const header = isMobile ? <MobileTopBar title="Carrinho de NFTs" /> : <CheckoutBreadcrumb current="Carrinho" />
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <header>
-        <h1 className="display-title text-foreground">Carrinho</h1>
-        {items.length > 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            {items.length} {items.length === 1 ? 'item' : 'itens'} · valores calculados pela cotação da rede
-          </p>
-        )}
-      </header>
+  if (isLoading && !cart) {
+    return (
+      <div>
+        {header}
+        <CartPageSkeleton mobile={isMobile} />
+      </div>
+    )
+  }
 
-      {error ? (
+  if (error) {
+    return (
+      <div>
+        {header}
         <Alert variant="destructive">
           <AlertTitle>Não foi possível carregar o carrinho</AlertTitle>
           <AlertDescription>{normalizeError(error).message}</AlertDescription>
@@ -69,71 +76,132 @@ export function CartPage() {
             Tentar novamente
           </Button>
         </Alert>
-      ) : items.length === 0 ? (
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div>
+        {header}
         <CartEmptyState />
-      ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <ul className="space-y-3">
-            {items.map((item) => (
-              <CartItemCard
-                key={item.id}
-                item={item}
-                pending={updatingItemId === item.id || removingItemId === item.id}
-                onChangeQuantity={(quantity) => updateItem.mutate({ itemId: item.id, quantity })}
-                onRemove={() => removeItem.mutate(item.id)}
-              />
-            ))}
-          </ul>
-          <aside className="lg:sticky lg:top-20">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Resumo do pedido</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <CartCouponForm
-                  couponCode={cart?.couponCode ?? null}
-                  percentOff={quote?.coupon?.percentOff ?? null}
-                  applyPending={applyCoupon.isPending}
-                  removePending={removeCoupon.isPending}
-                  onApply={(code) => applyCoupon.mutate(code)}
-                  onRemove={() => removeCoupon.mutate()}
-                />
-                <CartSummary quote={quote} quotePending={quotePending} itemsCount={items.length} />
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
-      )}
+        {!isMobile && <NftRail title="Colecionadores também viram" params={{ sort: 'popular' }} />}
+      </div>
+    )
+  }
+
+  const coupon = (variant: 'bar' | 'pill') => (
+    <CartCouponForm
+      variant={variant}
+      couponCode={cart?.couponCode ?? null}
+      percentOff={quote?.coupon?.percentOff ?? null}
+      applyPending={applyCoupon.isPending}
+      removePending={removeCoupon.isPending}
+      onApply={(code) => applyCoupon.mutate(code)}
+      onRemove={() => removeCoupon.mutate()}
+    />
+  )
+
+  const blockedHint = blocked && (
+    <p className="text-center text-xs text-destructive" role="status">
+      Ajuste os itens indisponíveis para finalizar.
+    </p>
+  )
+
+  const list = (layout: 'row' | 'card') => (
+    <ul className={layout === 'row' ? 'space-y-3' : 'space-y-4'} aria-label="Itens do carrinho">
+      {items.map((item, index) => (
+        <CartItemCard
+          key={item.id}
+          item={item}
+          index={index}
+          layout={layout}
+          pending={updatingItemId === item.id || removingItemId === item.id}
+          onChangeQuantity={(quantity) => updateItem.mutate({ itemId: item.id, quantity })}
+          onRemove={() => removeItem.mutate(item.id)}
+        />
+      ))}
+    </ul>
+  )
+
+  // ------------------------------- Mobile -------------------------------
+  if (isMobile) {
+    return (
+      <div>
+        {header}
+        {list('card')}
+        <section aria-label="Resumo do pedido" className="-mx-4 mt-6 animate-rise rounded-t-[28px] bg-card px-6 pb-8 pt-6">
+          {coupon('pill')}
+          <div className="mt-5">
+            <CartTotals quote={quote} />
+          </div>
+          <div className="mt-6 space-y-2">
+            <CheckoutCta disabled={blocked} pill />
+            {blockedHint}
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  // ------------------------------ Desktop -------------------------------
+  return (
+    <div>
+      {header}
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_332px] lg:gap-[86px]">
+        <section aria-labelledby="cart-title">
+          <h1 id="cart-title" className="sr-only">
+            Carrinho de NFTs
+          </h1>
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_110px_110px_130px_40px] gap-3 border-b border-rule pb-3 text-base font-bold" aria-hidden="true">
+            <span>NFTs</span>
+            <span>Preço</span>
+            <span>Edições</span>
+            <span>Total</span>
+            <span />
+          </div>
+          {list('row')}
+        </section>
+
+        <aside aria-labelledby="summary-title" className="animate-rise lg:sticky lg:top-24">
+          <h2 id="summary-title" className="border-b border-rule pb-3 text-lg font-bold">
+            Resumo da carteira
+          </h2>
+          <p className="mb-2 mt-6 text-sm font-bold">Código promocional</p>
+          {coupon('bar')}
+          <div className="mt-6">
+            <CartTotals quote={quote} />
+          </div>
+          <div className="mt-6 space-y-2">
+            <CheckoutCta disabled={blocked} />
+            {blockedHint}
+          </div>
+          <Link to="/" search={{}} className="mt-4 block text-center text-base text-accent transition-colors duration-200 hover:text-foreground">
+            Continuar explorando
+          </Link>
+        </aside>
+      </div>
+
+      <NftRail title="Colecionadores também viram" params={{ sort: 'popular' }} />
     </div>
   )
 }
 
-function CartPageSkeleton() {
+function CartPageSkeleton({ mobile }: { mobile: boolean }) {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" aria-label="Carregando carrinho">
+    <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_332px] lg:gap-[86px]" aria-label="Carregando carrinho">
       <div className="space-y-3">
-        {[0, 1].map((i) => (
-          <div key={i} className="flex gap-4 rounded-lg border border-border bg-card p-4">
-            <Skeleton className="size-20 rounded-md" />
-            <div className="flex flex-1 flex-col justify-between gap-2">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-1/3" />
-              <Skeleton className="h-8 w-32" />
-            </div>
-          </div>
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className={mobile ? 'h-[100px] w-full rounded-xl' : 'h-[70px] w-full'} />
         ))}
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumo do pedido</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-11 w-full" />
+      </div>
     </div>
   )
 }

@@ -2,32 +2,38 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { MobileTopBar } from '@/components/layout/mobile-top-bar'
 import type { Chain } from '@/api/contracts'
 import { useConnectWallet, useWallets } from '@/hooks/use-account'
 import { useCart } from '@/hooks/use-cart'
+import { useIsMobile } from '@/hooks/use-media-query'
 import { useCreateOrder, useQuote } from '@/hooks/use-order'
+import { formatEth } from '@/lib/money'
+import { CheckoutBreadcrumb } from './checkout-breadcrumb'
 import { CollectorForm, type CollectorFormValues } from './collector-form'
-import { NetworkSelector } from './network-selector'
 import { QuoteSummary } from './quote-summary'
 import { WalletPicker } from './wallet-picker'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const USERNAME_RE = /^[a-z0-9._]{3,30}$/
 
 /** Validação client-side espelhando as regras da API (mesmas mensagens). */
 function validateCollector(values: CollectorFormValues): Record<string, string> {
   const errors: Record<string, string> = {}
   if (values.fullName.trim().length < 3) errors.fullName = 'Informe o nome completo.'
+  if (!USERNAME_RE.test(values.username.trim()))
+    errors.username = 'Informe um nome de usuário (3 a 30 caracteres: letras minúsculas, números, ponto ou sublinhado).'
   if (!EMAIL_RE.test(values.email.trim())) errors.email = 'Informe um e-mail válido.'
-  if (!values.country) errors.country = 'Selecione o país.'
+  if (values.note.length > 280) errors.note = 'A observação aceita até 280 caracteres.'
   return errors
 }
 
 export function CheckoutPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { data: cart, isLoading: cartLoading } = useCart()
   const { data: wallets, isLoading: walletsLoading } = useWallets()
   const connectWallet = useConnectWallet()
@@ -36,7 +42,8 @@ export function CheckoutPage() {
 
   const [network, setNetwork] = useState<Chain>('ethereum')
   const [walletId, setWalletId] = useState<string | null>(null)
-  const [collector, setCollector] = useState<CollectorFormValues>({ fullName: '', email: '', country: '', document: '' })
+  const [connectedIds, setConnectedIds] = useState<string[]>([])
+  const [collector, setCollector] = useState<CollectorFormValues>({ fullName: '', username: '', email: '', note: '' })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [confirmChanges, setConfirmChanges] = useState(false)
 
@@ -99,14 +106,20 @@ export function CheckoutPage() {
   const connectingWalletId = connectWallet.isPending ? connectWallet.variables : null
 
   const handleConnect = (id: string) => {
-    connectWallet.mutate(id, { onSuccess: () => setWalletId(id) })
+    connectWallet.mutate(id, {
+      onSuccess: () => {
+        setWalletId(id)
+        setConnectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+      },
+      onError: () => setConnectedIds((prev) => prev.filter((value) => value !== id)),
+    })
   }
 
   const collectorPayload = {
     fullName: collector.fullName.trim(),
+    username: collector.username.trim(),
     email: collector.email.trim(),
-    country: collector.country,
-    ...(collector.document.trim() ? { document: collector.document.trim() } : {}),
+    ...(collector.note.trim() ? { note: collector.note.trim() } : {}),
   }
 
   const handleSubmitOrder = () => {
@@ -124,7 +137,13 @@ export function CheckoutPage() {
 
     const errors = validateCollector(collector)
     setFieldErrors(errors)
-    if (Object.keys(errors).length > 0 || !quote || !selectedWalletId) return
+    if (Object.keys(errors).length > 0) {
+      // Leva o foco ao primeiro campo inválido (teclado e leitor de tela)
+      const first = Object.keys(errors)[0]
+      document.getElementById(`checkout-${first}`)?.focus()
+      return
+    }
+    if (!quote || !selectedWalletId) return
     void submit({ quoteFingerprint: quote.fingerprint, walletId: selectedWalletId, network, collector: collectorPayload })
   }
 
@@ -132,139 +151,196 @@ export function CheckoutPage() {
 
   if (cartLoading && !cart) return <CheckoutSkeleton />
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <header>
-        <h1 className="display-title text-foreground">Pagamento</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Revise os dados do colecionador, a carteira e a rede antes de confirmar.</p>
-      </header>
+  const header = isMobile ? <MobileTopBar title="Pagamento com carteira" fallback="/cart" /> : <CheckoutBreadcrumb current="Pagamento" />
 
-      {cart && items.length === 0 && !pendingRecovery ? (
-        <Alert variant="info">
-          <AlertTitle>Seu carrinho está vazio</AlertTitle>
-          <AlertDescription>
-            Adicione itens ao carrinho antes de finalizar a compra.{' '}
-            <Button asChild variant="link" className="h-auto p-0 align-baseline">
-              <Link to="/" search={{}}>Explorar NFTs</Link>
+  if (cart && items.length === 0) {
+    return (
+      <div>
+        {header}
+        {pendingRecovery ? (
+          <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />
+        ) : (
+          <div className="flex animate-rise flex-col items-center gap-4 bg-card px-6 py-16 text-center">
+            <h1 className="text-xl font-bold">Seu carrinho está vazio</h1>
+            <p className="text-sm text-muted-foreground">Adicione itens ao carrinho antes de finalizar a compra.</p>
+            <Button asChild>
+              <Link to="/" search={{}}>
+                Explorar NFTs
+              </Link>
             </Button>
-          </AlertDescription>
-        </Alert>
-      ) : cart && items.length === 0 && pendingRecovery ? (
-        <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />
-      ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="space-y-6">
-            {quoteError && (
-              <Alert variant="destructive">
-                <AlertTitle>Não foi possível calcular a cotação</AlertTitle>
-                <AlertDescription>{quoteError.message}</AlertDescription>
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => requestQuoteRef.current(network)}>
-                  Tentar novamente
-                </Button>
-              </Alert>
-            )}
-
-            {pendingRecovery && (
-              <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />
-            )}
-
-            {state.kind === 'conflict' && (
-              <Alert variant="destructive">
-                <AlertTitle>Os valores do pedido mudaram</AlertTitle>
-                <AlertDescription>{state.message}</AlertDescription>
-                <div className="mt-3 flex items-start gap-2">
-                  <Checkbox
-                    id="confirm-changes"
-                    data-testid="confirm-changes"
-                    checked={confirmChanges}
-                    disabled={submitting || !quote}
-                    onCheckedChange={(checked) => setConfirmChanges(checked === true)}
-                  />
-                  <Label htmlFor="confirm-changes" className="cursor-pointer text-xs font-normal leading-snug text-foreground">
-                    Entendi: os valores foram atualizados e quero revisar a nova cotação antes de reenviar o pedido.
-                  </Label>
-                </div>
-              </Alert>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle>1. Dados do colecionador</CardTitle>
-                <CardDescription>Estes dados aparecerão no recibo do pedido.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CollectorForm
-                  values={collector}
-                  errors={fieldErrors}
-                  disabled={submitting}
-                  onChange={(field, value) => {
-                    setCollector((prev) => ({ ...prev, [field]: value }))
-                    if (fieldErrors[field]) {
-                      setFieldErrors((prev) => {
-                        const next = { ...prev }
-                        delete next[field]
-                        return next
-                      })
-                    }
-                  }}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>2. Carteira</CardTitle>
-                <CardDescription>Selecione a carteira que pagará o pedido.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WalletPicker
-                  wallets={wallets}
-                  isLoading={walletsLoading}
-                  selectedId={selectedWalletId}
-                  connectingId={connectingWalletId}
-                  disabled={submitting}
-                  onSelect={setWalletId}
-                  onConnect={handleConnect}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>3. Rede</CardTitle>
-                <CardDescription>A taxa de rede é calculada pela blockchain escolhida.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <NetworkSelector value={network} disabled={submitting} onChange={setNetwork} />
-              </CardContent>
-            </Card>
           </div>
+        )}
+      </div>
+    )
+  }
 
-          <aside className="lg:sticky lg:top-20">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Seus NFTs</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <QuoteSummary quote={quote} isPending={quotePending} />
-                <Button size="lg" className="w-full" data-testid="submit-order" isPending={submitting} disabled={submitDisabled} onClick={handleSubmitOrder}>
-                  Confirmar compra
-                </Button>
-                {state.kind === 'conflict' && !confirmChanges && (
-                  <p className="text-center text-xs text-muted-foreground">Marque a confirmação acima para reenviar.</p>
-                )}
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
+  const alerts = (
+    <>
+      {quoteError && (
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível calcular a cotação</AlertTitle>
+          <AlertDescription>{quoteError.message}</AlertDescription>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => requestQuoteRef.current(network)}>
+            Tentar novamente
+          </Button>
+        </Alert>
       )}
+      {pendingRecovery && <RecoveryAlert submitting={submitting} onRecover={() => void recover()} />}
+      {state.kind === 'conflict' && (
+        <Alert variant="destructive" className="animate-rise">
+          <AlertTitle>Os valores do pedido mudaram</AlertTitle>
+          <AlertDescription>{state.message}</AlertDescription>
+          <div className="mt-3 flex items-start gap-2">
+            <Checkbox
+              id="confirm-changes"
+              data-testid="confirm-changes"
+              checked={confirmChanges}
+              disabled={submitting || !quote}
+              onCheckedChange={(checked) => setConfirmChanges(checked === true)}
+            />
+            <Label htmlFor="confirm-changes" className="cursor-pointer text-xs leading-snug">
+              Entendi: os valores foram atualizados e quero revisar a nova cotação antes de reenviar o pedido.
+            </Label>
+          </div>
+        </Alert>
+      )}
+    </>
+  )
+
+  const form = (
+    <CollectorForm
+      values={collector}
+      errors={fieldErrors}
+      disabled={submitting}
+      network={network}
+      onNetworkChange={setNetwork}
+      onChange={(field, value) => {
+        setCollector((prev) => ({ ...prev, [field]: value }))
+        if (fieldErrors[field]) {
+          setFieldErrors((prev) => {
+            const next = { ...prev }
+            delete next[field]
+            return next
+          })
+        }
+      }}
+    />
+  )
+
+  const walletPicker = (
+    <WalletPicker
+      wallets={wallets}
+      isLoading={walletsLoading}
+      selectedId={selectedWalletId}
+      connectingId={connectingWalletId}
+      connectedIds={connectedIds}
+      disabled={submitting}
+      onSelect={setWalletId}
+      onConnect={handleConnect}
+    />
+  )
+
+  const conflictHint = state.kind === 'conflict' && !confirmChanges && (
+    <p className="text-center text-xs text-muted-foreground">Marque a confirmação acima para reenviar.</p>
+  )
+
+  // ------------------------------- Mobile -------------------------------
+  if (isMobile) {
+    return (
+      <div className="pb-32">
+        {header}
+        <div className="space-y-6">
+          {alerts}
+          <section aria-labelledby="mobile-wallets-title">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 id="mobile-wallets-title" className="text-base font-bold">
+                Carteira e rede
+              </h2>
+              <Link to="/wallets" className="text-sm font-bold text-accent">
+                Trocar carteira
+              </Link>
+            </div>
+            {walletPicker}
+          </section>
+          <section aria-labelledby="mobile-collector-title">
+            <h2 id="mobile-collector-title" className="mb-4 text-base font-bold">
+              Perfil do colecionador
+            </h2>
+            {form}
+          </section>
+          <section aria-label="Resumo do pedido" className="rounded-[22px] bg-card p-5">
+            <QuoteSummary quote={quote} isPending={quotePending} showLines={false} />
+          </section>
+        </div>
+        <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6">
+          {quote && (
+            <p className="mb-3 flex items-center justify-end gap-3 text-base font-bold">
+              Total: <span className="text-xl text-accent">{formatEth(quote.total)}</span>
+            </p>
+          )}
+          <Button
+            variant="pill"
+            size="pill"
+            className="w-full"
+            data-testid="submit-order"
+            isPending={submitting}
+            disabled={submitDisabled}
+            onClick={handleSubmitOrder}
+          >
+            Confirmar compra
+          </Button>
+          {conflictHint}
+        </div>
+      </div>
+    )
+  }
+
+  // ------------------------------ Desktop -------------------------------
+  return (
+    <div>
+      {header}
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,405px)] lg:gap-8">
+        <div className="space-y-6">
+          {alerts}
+          <section aria-labelledby="collector-title" className="animate-rise">
+            <h1 id="collector-title" className="mb-5 text-lg font-bold">
+              Perfil do colecionador
+            </h1>
+            {form}
+          </section>
+        </div>
+
+        <aside aria-label="Resumo e pagamento" className="flex animate-rise flex-col gap-6 [animation-delay:90ms] lg:sticky lg:top-24">
+          <section aria-labelledby="summary-title">
+            <h2 id="summary-title" className="mb-3 text-lg font-bold">
+              Seus NFTs
+            </h2>
+            <QuoteSummary quote={quote} isPending={quotePending} />
+          </section>
+          <section aria-labelledby="wallets-title">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 id="wallets-title" className="text-lg font-bold">
+                Carteira e rede
+              </h2>
+              <Link to="/wallets" className="text-sm font-bold text-accent hover:underline">
+                Gerenciar
+              </Link>
+            </div>
+            {walletPicker}
+          </section>
+          <Button size="lg" className="h-[45px] w-full text-base" data-testid="submit-order" isPending={submitting} disabled={submitDisabled} onClick={handleSubmitOrder}>
+            Confirmar compra
+          </Button>
+          {conflictHint}
+        </aside>
+      </div>
     </div>
   )
 }
 
 function RecoveryAlert({ submitting, onRecover }: { submitting: boolean; onRecover: () => void }) {
   return (
-    <Alert variant="info">
+    <Alert variant="info" className="animate-rise">
       <AlertTitle>O servidor demorou para responder</AlertTitle>
       <AlertDescription>
         Seu pedido pode ter sido criado. Verifique o status antes de tentar novamente — a mesma tentativa será retomada.
@@ -278,13 +354,20 @@ function RecoveryAlert({ submitting, onRecover }: { submitting: boolean; onRecov
 
 function CheckoutSkeleton() {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" aria-label="Carregando pagamento">
-      <div className="space-y-6">
-        <Skeleton className="h-72 w-full" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-32 w-full" />
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_405px]" aria-label="Carregando pagamento">
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
       </div>
-      <Skeleton className="h-96 w-full" />
+      <div className="space-y-3">
+        <Skeleton className="h-[70px] w-full" />
+        <Skeleton className="h-[70px] w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
     </div>
   )
 }

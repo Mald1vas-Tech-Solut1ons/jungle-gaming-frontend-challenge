@@ -1,68 +1,67 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Quote } from '@/api/contracts'
 import { compareEth, formatEth } from '@/lib/money'
 
-interface CartSummaryProps {
+interface CartTotalsProps {
   quote: Quote | null
-  quotePending: boolean
-  itemsCount: number
 }
 
 /**
- * Resumo de valores do carrinho. Subtotal, desconto, taxa de rede e total
- * SEMPRE vêm da cotação da API (nunca calculados no cliente).
+ * Totais do carrinho. Subtotal, desconto, taxa de rede e total SEMPRE vêm da
+ * cotação da API (nunca calculados no cliente); o skeleton preserva as
+ * dimensões enquanto a primeira cotação chega.
  */
-export function CartSummary({ quote, quotePending, itemsCount }: CartSummaryProps) {
+export function CartTotals({ quote }: CartTotalsProps) {
   const hasDiscount = quote !== null && compareEth(quote.discount, '0') > 0
-  const loading = quote === null && quotePending
+  const value = (testId: string, content: string | undefined, className?: string) =>
+    content !== undefined ? (
+      <dd key={content} data-testid={testId} className={`animate-fade ${className ?? ''}`}>
+        {content}
+      </dd>
+    ) : (
+      <dd>
+        <Skeleton className="h-5 w-24" />
+      </dd>
+    )
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Subtotal</span>
-          {quote ? <span data-testid="cart-subtotal">{formatEth(quote.subtotal)}</span> : <Skeleton className="h-4 w-24" />}
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">
-            Desconto{quote?.coupon ? ` (${quote.coupon.code} −${quote.coupon.percentOff}%)` : ''}
-          </span>
-          {quote ? (
-            <span data-testid="cart-discount" className={hasDiscount ? 'text-success' : undefined}>
-              {hasDiscount ? `−${formatEth(quote.discount)}` : formatEth(quote.discount)}
-            </span>
-          ) : (
-            <Skeleton className="h-4 w-16" />
-          )}
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Taxa de rede</span>
-          {quote ? <span data-testid="cart-fee">{formatEth(quote.networkFee)}</span> : <Skeleton className="h-4 w-16" />}
-        </div>
-        <Separator />
-        <div className="flex items-center justify-between text-base font-semibold">
-          <span>Total</span>
-          {quote ? (
-            <span data-testid="cart-total" className="text-primary">
-              {formatEth(quote.total)}
-            </span>
-          ) : (
-            <Skeleton className="h-4 w-28" />
-          )}
-        </div>
+    <dl className="space-y-2.5 text-base" aria-live="polite" aria-busy={quote === null}>
+      <div className="flex items-center justify-between">
+        <dt>Subtotal</dt>
+        {value('cart-subtotal', quote ? formatEth(quote.subtotal) : undefined, 'text-lg')}
       </div>
+      <div className="flex items-center justify-between">
+        <dt>{quote?.coupon ? `Desconto (${quote.coupon.code} −${quote.coupon.percentOff}%)` : 'Desconto do lançamento'}</dt>
+        {value('cart-discount', quote ? (hasDiscount ? `−${formatEth(quote.discount)}` : formatEth(quote.discount)) : undefined, hasDiscount ? 'text-success' : '')}
+      </div>
+      <div className="flex items-center justify-between">
+        <dt>Taxa de rede</dt>
+        {value('cart-fee', quote ? formatEth(quote.networkFee) : undefined, 'text-lg')}
+      </div>
+      <p className="text-right text-xs text-accent">Taxa estimada (Ethereum)</p>
+      <div className="flex items-center justify-between pt-3">
+        <dt className="font-bold">Total</dt>
+        {value('cart-total', quote ? formatEth(quote.total) : undefined, 'text-xl font-bold text-accent')}
+      </div>
+    </dl>
+  )
+}
 
-      {loading && <p className="text-xs text-muted-foreground">Calculando totais…</p>}
-
-      <Button asChild size="lg" className="w-full" data-testid="checkout-button" disabled={itemsCount === 0}>
-        <Link to="/checkout">Conectar e finalizar</Link>
-      </Button>
-      <Link to="/" search={{}} className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground">
-        Continuar explorando
+export function CheckoutCta({ disabled, pill = false }: { disabled: boolean; pill?: boolean }) {
+  return (
+    <Button
+      asChild
+      variant={pill ? 'pill' : 'default'}
+      size={pill ? 'pill' : 'lg'}
+      className={pill ? 'w-full' : 'h-11 w-full text-base'}
+      data-testid="checkout-button"
+      aria-disabled={disabled || undefined}
+    >
+      <Link to="/checkout" disabled={disabled}>
+        Conectar e finalizar
       </Link>
-    </div>
+    </Button>
   )
 }
