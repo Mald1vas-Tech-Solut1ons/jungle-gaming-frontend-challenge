@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { login, logout, setScenario, setup, toast, USERS } from './helpers'
+import { addItemToCartApi, fillCollector, getState, login, logout, setScenario, setup, toast, USERS } from './helpers'
 
 /**
  * Área 8: edição de perfil (nome/avatar persistem), troca de senha com
@@ -141,4 +141,28 @@ test('wallet-refused: conexão recusada exibe o motivo no toast', async ({ page 
   await setScenario(page, 'wallet-refused')
   await page.getByTestId('wallet-connect').click()
   await expect(toast(page, 'A conexão foi recusada na carteira.')).toBeVisible()
+})
+
+test('wallet-disconnect: carteira desconecta no pagamento e a compra exige reconexão', async ({ page }) => {
+  await login(page, USERS.ana.email, USERS.ana.password)
+  await addItemToCartApi(page, 'nft-001')
+  await page.goto('/checkout')
+  await expect(page.getByTestId('checkout-fullName')).toBeVisible()
+  await fillCollector(page)
+  await expect(page.getByTestId('quote-total')).toBeVisible()
+
+  // A carteira cai exatamente na hora de confirmar — pedido não é criado
+  await setScenario(page, 'wallet-disconnect')
+  await page.getByTestId('submit-order').click()
+  await expect(toast(page, 'A carteira foi desconectada durante o pagamento.')).toBeVisible()
+  await expect(page).toHaveURL(/\/checkout/)
+  const state = await getState(page)
+  expect(state.body.orders).toHaveLength(0)
+
+  // Reconecta a carteira, volta ao cenário normal e a compra conclui
+  await setScenario(page, 'default')
+  await page.getByTestId('checkout-wallet-connect').click()
+  await page.getByTestId('submit-order').click()
+  await expect(page).toHaveURL(/\/orders\/ord-\d+/, { timeout: 15_000 })
+  await expect(page.getByTestId('order-receipt')).toBeVisible({ timeout: 30_000 })
 })

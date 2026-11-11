@@ -32,6 +32,7 @@ const SCENARIO_HINTS: Record<string, string> = {
   'order-timeout': 'A criação do pedido estoura o timeout (recupere pela idempotência).',
   'payment-rejected': 'O pagamento é recusado pela carteira.',
   'wallet-refused': 'Conectar a carteira é recusado.',
+  'wallet-disconnect': 'A carteira desconecta na hora de pagar — reconecte e tente de novo.',
 }
 
 /**

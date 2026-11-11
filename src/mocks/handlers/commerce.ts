@@ -302,6 +302,14 @@ export const commerceHandlers = [
     const key = `user:${auth.user.id}`
     if (!getCart(key).items.length) return apiError(422, 'VALIDATION_ERROR', 'Seu carrinho está vazio.')
 
+    // 2.5) Desconexão da carteira no momento do pagamento (requisito §3:
+    // "simulação de conexão, recusa e desconexão")
+    if (isScenario('wallet-disconnect') && once('wallet-disconnect')) {
+      return apiError(403, 'FORBIDDEN', 'A carteira foi desconectada durante o pagamento. Reconecte a carteira e tente novamente.', {
+        walletId: 'Carteira desconectada. Reconecte antes de confirmar.',
+      })
+    }
+
     // 3) Cenários de mudança durante a compra (antes da revalidação)
     if (isScenario('price-change') && once('price-change')) {
       const first = getCart(key).items[0]

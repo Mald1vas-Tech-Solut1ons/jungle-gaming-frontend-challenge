@@ -1,10 +1,12 @@
-# Jungle Marketplace — Frontend Challenge
+# Kurio Marketplace — Frontend Challenge
 
 [![CI](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mald1vas-Tech-Solut1ons/jungle-gaming-frontend-challenge/actions/workflows/ci.yml)
 
+![Kurio](public/logo.png)
+
 Marketplace de NFTs desenvolvido como teste técnico frontend para a **Jungle Gaming**, seguindo o design do [Figma do desafio](https://www.figma.com/design/Ff0SksUi7UFtPWUO8kyNtw/Frontend-Challenge).
 
-A entrega roda **100% no navegador**: o backend é uma simulação completa (MSW) com estado persistente, tempo real via Socket.IO simulado e 13 cenários de falha acionáveis sem tocar em código. A demo publicada usa os mocks como backend.
+A entrega roda **100% no navegador**: o backend é uma simulação completa (MSW) com estado persistente, tempo real via Socket.IO simulado e 14 cenários de falha acionáveis sem tocar em código. A demo publicada usa os mocks como backend.
 
 ## Stack
 
@@ -60,7 +62,7 @@ Cupons de teste:
 
 ## Cenários de simulação
 
-A loja reage a 13 cenários determinísticos de rede e negócio, selecionáveis de três formas:
+A loja reage a 14 cenários determinísticos de rede e negócio, selecionáveis de três formas:
 
 1. **Query string** — `?scenario=<nome>` (ex.: `http://localhost:5173/?scenario=order-timeout`); o valor é persistido em `localStorage`.
 2. **Painel de Simulação** — botão flutuante com ícone de frasco (canto inferior direito, `data-testid="scenario-panel-open"`). Permite trocar o cenário, **resetar dados**, reenviar **evento duplicado**, emitir **evento antigo**, **derrubar conexões** e ver pedidos pendentes/conexões ativas.
@@ -81,6 +83,7 @@ A loja reage a 13 cenários determinísticos de rede e negócio, selecionáveis 
 | `order-timeout` | A criação do pedido estoura o timeout do cliente — o pedido existe e é recuperável por idempotência |
 | `payment-rejected` | O pagamento é recusado na liquidação do pedido |
 | `wallet-refused` | A conexão da carteira é recusada (`403`) |
+| `wallet-disconnect` | A carteira desconecta no momento do pagamento (`403`, uma vez) — reconecte e tente de novo |
 
 Cenários marcados "uma vez" disparam apenas na primeira ocorrência dentro do cenário ativo; trocar de cenário (ou resetar) zera o contador.
 
@@ -208,7 +211,7 @@ Envelope único (tipado em `src/api/contracts.ts`): `{ eventId, type, resource: 
 │   ├── api/contracts.ts  # Tipos compartilhados REST + eventos (única fonte de verdade app ↔ mock)
 │   ├── mocks/            # Backend simulado MSW
 │   │   ├── handlers/     # catalog | commerce | account | control
-│   │   ├── scenarios.ts  # 13 cenários de simulação
+│   │   ├── scenarios.ts  # 14 cenários de simulação
 │   │   ├── realtime.ts   # Socket.IO simulado (@mswjs/socket.io-binding)
 │   │   ├── db.ts         # Estado persistente (localStorage 'mock:db') + reset
 │   │   ├── fixtures.ts   # Dados determinísticos (36 NFTs, usuários, cupons, taxas)
