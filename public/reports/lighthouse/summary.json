@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-11-11T02:04:28.166Z",
+  "generatedAt": "2026-11-11T03:38:02.083Z",
   "baseUrl": "http://localhost:4173",
   "runs": 3,
   "pages": {
     "/": {
       "mobile": {
         "medians": {
-          "performance": 72,
+          "performance": 75,
           "accessibility": 100,
           "best-practices": 100,
-          "seo": 92,
-          "lcp": 1012.2743,
-          "cls": 0.01183657244146957,
-          "tbt": 1358.999999999999
+          "seo": 100,
+          "lcp": 4890.17765,
+          "cls": 0.02575102846884703,
+          "tbt": 315.90497499999947
         },
         "reports": [
           "home-mobile-1",
@@ -22,13 +22,13 @@
       },
       "desktop": {
         "medians": {
-          "performance": 26,
+          "performance": 98,
           "accessibility": 100,
           "best-practices": 100,
-          "seo": 92,
-          "lcp": 9308.147,
-          "cls": 0.002336958375070502,
-          "tbt": 1360.884
+          "seo": 100,
+          "lcp": 1067.759025,
+          "cls": 0.001165694240620097,
+          "tbt": 7.499999999999886
         },
         "reports": [
           "home-desktop-1",
@@ -40,13 +40,13 @@
     "/nft/nft-001": {
       "mobile": {
         "medians": {
-          "performance": 55,
+          "performance": 71,
           "accessibility": 100,
           "best-practices": 100,
-          "seo": 92,
-          "lcp": 5643.3248,
+          "seo": 100,
+          "lcp": 4906.666000000001,
           "cls": 0,
-          "tbt": 1175.3503
+          "tbt": 355.00000000000045
         },
         "reports": [
           "nft-detail-mobile-1",
@@ -56,13 +56,13 @@
       },
       "desktop": {
         "medians": {
-          "performance": 26,
+          "performance": 99,
           "accessibility": 100,
           "best-practices": 100,
-          "seo": 92,
-          "lcp": 10145.506,
-          "cls": 0,
-          "tbt": 1161.5010000000002
+          "seo": 100,
+          "lcp": 1016.8449999999999,
+          "cls": 0.00051359396587936,
+          "tbt": 0
         },
         "reports": [
           "nft-detail-desktop-1",

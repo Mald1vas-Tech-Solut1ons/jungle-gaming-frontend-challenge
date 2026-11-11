@@ -17,6 +17,7 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import lighthouse from 'lighthouse'
+import desktopConfig from 'lighthouse/core/config/desktop-config.js'
 import { launch } from 'chrome-launcher'
 
 const PROGRESS_LOG = join(dirname(fileURLToPath(import.meta.url)), '.lh-progress.log')
@@ -51,14 +52,15 @@ const PROFILES = {
     screenEmulation: { mobile: true, width: 390, height: 844, deviceScaleFactor: 3, disabled: false },
     throttlingMethod: 'simulate',
   },
+  // Preset oficial `lighthouse --preset=desktop` (rede desktopDense4G, CPU 1×,
+  // tela 1350×940). Sem o bloco `throttling`, o perfil herdaria a rede lenta e
+  // a CPU 4× do mobile — o que fazia o "desktop" pontuar abaixo do mobile.
   desktop: {
-    formFactor: 'desktop',
-    screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: true },
-    // Throttling real via CDP (padrão do Lighthouse CLI para desktop): o modo
-    // 'simulate' (Lantern) superestima o LCP quando o app intercepta a rede
-    // com service worker (mocks MSW) — medido: LCP observado 1,4s vs 5,3s
-    // simulado na mesma execução.
-    throttlingMethod: 'devtools',
+    formFactor: desktopConfig.settings.formFactor,
+    screenEmulation: desktopConfig.settings.screenEmulation,
+    emulatedUserAgent: desktopConfig.settings.emulatedUserAgent,
+    throttlingMethod: 'simulate',
+    throttling: desktopConfig.settings.throttling,
   },
 }
 
