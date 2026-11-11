@@ -27,7 +27,7 @@ import {
   saveCart,
 } from '../support'
 
-const CHAINS: Chain[] = ['ethereum', 'polygon', 'arbitrum']
+const CHAINS: Chain[] = ['ethereum', 'polygon', 'solana']
 
 /** Resolve o carrinho da requisição (usuário autenticado ou visitante). */
 async function resolveCart(request: Request) {
@@ -293,7 +293,9 @@ export const commerceHandlers = [
     const fields: Record<string, string> = {}
     if (!body.collector?.fullName || body.collector.fullName.trim().length < 3) fields.fullName = 'Informe o nome completo.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.collector?.email ?? '')) fields.email = 'Informe um e-mail válido.'
-    if (!body.collector?.country) fields.country = 'Selecione o país.'
+    if (!/^[a-z0-9._]{3,30}$/.test(body.collector?.username ?? ''))
+      fields.username = 'Informe um nome de usuário (3 a 30 caracteres: letras minúsculas, números, ponto ou sublinhado).'
+    if ((body.collector?.note ?? '').length > 280) fields.note = 'A observação aceita até 280 caracteres.'
     const wallet = (db().wallets[auth.user.id] ?? []).find((w) => w.id === body.walletId)
     if (!wallet) fields.walletId = 'Selecione uma carteira cadastrada.'
     if (!CHAINS.includes(body.network)) fields.network = 'Selecione uma rede.'

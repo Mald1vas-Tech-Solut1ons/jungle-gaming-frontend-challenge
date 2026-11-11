@@ -23,7 +23,7 @@ function createSession(userId: string): Session {
 }
 
 const WALLET_PROVIDERS = ['metamask', 'coinbase', 'walletconnect', 'phantom']
-const CHAINS = ['ethereum', 'polygon', 'arbitrum']
+const CHAINS = ['ethereum', 'polygon', 'solana']
 const MAX_AVATAR_CHARS = 1_500_000 // ~1MB em data URL
 
 export const accountHandlers = [

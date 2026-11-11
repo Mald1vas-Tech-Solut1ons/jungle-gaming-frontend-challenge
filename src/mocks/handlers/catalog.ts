@@ -1,11 +1,15 @@
 import Decimal from 'decimal.js'
 import { http, HttpResponse } from 'msw'
-import type { Chain, FavoritesResponse, Nft, NftCategory, NftRarity, NftSort, Paginated } from '@/api/contracts'
+import type { Chain, FavoritesResponse, Nft, NftCategory, NftFacets, NftListResponse, NftRarity, NftSort } from '@/api/contracts'
 import { db, mutate } from '../db'
 import { apiError, isScenario, simulateNetwork } from '../scenarios'
 import { API, authenticate } from '../support'
 
 const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : [])
+
+const CATEGORY_KEYS: readonly NftCategory[] = ['art', 'photography', 'music', 'collectibles', 'gaming', 'utility']
+const RARITY_KEYS: readonly NftRarity[] = ['common', 'rare', 'epic', 'legendary']
+const CHAIN_KEYS: readonly Chain[] = ['ethereum', 'polygon', 'solana']
 
 export const catalogHandlers = [
   http.get(`${API}/nfts`, async ({ request }) => {
@@ -25,17 +29,38 @@ export const catalogHandlers = [
     const page = Math.max(1, Number(url.searchParams.get('page') ?? 1) || 1)
     const pageSize = Math.min(48, Math.max(1, Number(url.searchParams.get('pageSize') ?? 12) || 12))
 
-    let items: Nft[] = isScenario('empty') ? [] : [...db().nfts]
-    if (featured) items = items.filter((n) => n.featured)
-    if (q)
-      items = items.filter((n) =>
-        [n.name, n.collection, n.creator].some((f) => f.toLowerCase().includes(q)),
-      )
-    if (categories.length) items = items.filter((n) => categories.includes(n.category))
-    if (rarities.length) items = items.filter((n) => rarities.includes(n.rarity))
-    if (chains.length) items = items.filter((n) => chains.includes(n.chain))
-    if (minPrice && !Number.isNaN(Number(minPrice))) items = items.filter((n) => new Decimal(n.price).gte(minPrice))
-    if (maxPrice && !Number.isNaN(Number(maxPrice))) items = items.filter((n) => new Decimal(n.price).lte(maxPrice))
+    const all: Nft[] = isScenario('empty') ? [] : [...db().nfts]
+    const hasMin = !!minPrice && !Number.isNaN(Number(minPrice))
+    const hasMax = !!maxPrice && !Number.isNaN(Number(maxPrice))
+
+    // Predicados por grupo: as contagens (facets) de um grupo aplicam todos os
+    // outros filtros, menos o do próprio grupo.
+    const base = (n: Nft) =>
+      (!featured || n.featured) &&
+      (!q || [n.name, n.collection, n.creator].some((f) => f.toLowerCase().includes(q))) &&
+      (!hasMin || new Decimal(n.price).gte(minPrice!)) &&
+      (!hasMax || new Decimal(n.price).lte(maxPrice!))
+    const byCategory = (n: Nft) => !categories.length || categories.includes(n.category)
+    const byRarity = (n: Nft) => !rarities.length || rarities.includes(n.rarity)
+    const byChain = (n: Nft) => !chains.length || chains.includes(n.chain)
+
+    const count = <K extends string>(keys: readonly K[], pick: (n: Nft) => K, rows: Nft[]) => {
+      const out = Object.fromEntries(keys.map((k) => [k, 0])) as Record<K, number>
+      for (const n of rows) out[pick(n)]++
+      return out
+    }
+    const prices = all.map((n) => new Decimal(n.price))
+    const facets: NftFacets = {
+      category: count(CATEGORY_KEYS, (n) => n.category, all.filter((n) => base(n) && byRarity(n) && byChain(n))),
+      rarity: count(RARITY_KEYS, (n) => n.rarity, all.filter((n) => base(n) && byCategory(n) && byChain(n))),
+      chain: count(CHAIN_KEYS, (n) => n.chain, all.filter((n) => base(n) && byCategory(n) && byRarity(n))),
+      price: {
+        min: prices.length ? Decimal.min(...prices).toString() : '0',
+        max: prices.length ? Decimal.max(...prices).toString() : '0',
+      },
+    }
+
+    const items = all.filter((n) => base(n) && byCategory(n) && byRarity(n) && byChain(n))
 
     const byPrice = (a: Nft, b: Nft) => new Decimal(a.price).comparedTo(b.price)
     const sorters: Record<NftSort, (a: Nft, b: Nft) => number> = {
@@ -49,12 +74,13 @@ export const catalogHandlers = [
 
     const total = items.length
     const totalPages = Math.max(1, Math.ceil(total / pageSize))
-    const body: Paginated<Nft> = {
+    const body: NftListResponse = {
       items: items.slice((page - 1) * pageSize, page * pageSize),
       page,
       pageSize,
       total,
       totalPages,
+      facets,
     }
     return HttpResponse.json(body)
   }),

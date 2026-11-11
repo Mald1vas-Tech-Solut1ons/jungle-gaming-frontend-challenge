@@ -23,6 +23,9 @@ export async function startMocks() {
   await initMockBackend()
   await worker.start({
     onUnhandledRequest: 'bypass',
+    // Sem log por requisição no console: em CPU limitada (mobile) o
+    // console.group de cada resposta mockada custa tempo de main thread.
+    quiet: true,
     serviceWorker: { url: '/mockServiceWorker.js' },
   })
 }

@@ -43,7 +43,7 @@ export interface DbState {
 }
 
 const STORAGE_KEY = 'mock:db'
-const SCHEMA = 1
+const SCHEMA = 2
 
 let state: DbState | null = null
 

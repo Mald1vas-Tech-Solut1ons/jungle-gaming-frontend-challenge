@@ -10,13 +10,24 @@ export const FIXTURE_EPOCH = Date.UTC(2026, 9, 1, 12, 0, 0) // 2026-10-01T12:00:
 const IMAGE_COUNT = 12
 export const nftImage = (n: number) => `/nfts/ape-${String(((n - 1) % IMAGE_COUNT) + 1).padStart(2, '0')}.webp`
 
-const ADJECTIVES = ['Cosmic', 'Golden', 'Bored', 'Neon', 'Royal', 'Wild', 'Lazy', 'Cyber', 'Ancient', 'Lucky', 'Silent', 'Funky']
-const NOUNS = ['Ape', 'Monke', 'Gorilla', 'Primate', 'Chimp', 'Kong']
-const COLLECTIONS = ['Jungle Apes', 'Monkey Kingdom', 'Pixel Primates', 'Banana Club']
-const CREATORS = ['@jungleart', '@pixelmonk', '@apestudio', '@bananadao', '@cryptokong']
-const CATEGORIES: NftCategory[] = ['art', 'gaming', 'collectibles', 'music', 'photography', 'sports']
+const ADJECTIVES = ['Cosmic', 'Golden', 'Emerald', 'Neon', 'Ivory', 'Violet', 'Sage', 'Amber', 'Velvet', 'Lunar', 'Silent', 'Royal']
+const NOUNS = ['Ape', 'Nomad', 'Vessel', 'Bloom', 'Baron', 'Beat']
+const COLLECTIONS = ['Kurio Apes', 'Kurio Editions', 'Kurio Nomads', 'Kurio Signals']
+const CREATORS = ['Nova Sato', 'Ilê Marques', 'Tomás Reis', 'Yara Fontes', 'Caio Brandt']
+const ATTRIBUTE_POOL = ['Óculos', 'Esmeralda', 'Chapéu', 'Moletom', 'Fones', 'Blazer', 'Corrente', 'Brinco', 'Jaqueta', 'Gola alta']
+const RARITY_ATTRIBUTE: Record<NftRarity, string> = { common: 'Comum', rare: 'Raro', epic: 'Épico', legendary: 'Lendário' }
+const REVIEWERS = ['marina.eth', 'otavio.kurio', 'lia.collects', 'dao.pedro', 'sofia.nft', 'rafa.vault']
+const REVIEW_COMMENTS = [
+  'Arte impecável e metadados completos. Chegou na carteira em segundos.',
+  'A procedência registrada na rede dá muita segurança para colecionar.',
+  'Edição muito bem acabada, o desbloqueável em alta resolução vale a pena.',
+  'Comunidade ativa e criador presente. Já estou de olho no próximo lançamento.',
+  'Processo de compra simples e a taxa de rede foi exatamente a cotada.',
+  'Peça central da minha coleção. Os atributos raros fazem diferença.',
+]
+const CATEGORIES: NftCategory[] = ['art', 'gaming', 'collectibles', 'music', 'photography', 'utility']
 const RARITIES: NftRarity[] = ['common', 'common', 'rare', 'rare', 'epic', 'legendary']
-const CHAINS: Chain[] = ['ethereum', 'polygon', 'arbitrum']
+const CHAINS: Chain[] = ['ethereum', 'polygon', 'solana']
 
 /** PRNG determinístico (mulberry32) */
 function prng(seed: number) {
@@ -37,6 +48,17 @@ function priceFor(rand: () => number, rarity: NftRarity): string {
   return (milli / 1000).toFixed(3)
 }
 
+/** Endereço de contrato fictício e determinístico (0x + 40 hex). */
+function contractFor(i: number): string {
+  let hex = ''
+  let x = (i * 2654435761) >>> 0
+  while (hex.length < 40) {
+    x = (Math.imul(x ^ (x >>> 13), 1274126177) + 0x9e3779b9) >>> 0
+    hex += x.toString(16).padStart(8, '0')
+  }
+  return `0x${hex.slice(0, 40)}`
+}
+
 export const NFT_COUNT = 36
 
 export function buildNfts(): Nft[] {
@@ -50,14 +72,14 @@ export function buildNfts(): Nft[] {
     const editions = [
       {
         id: `${id}-std`,
-        name: 'Standard',
+        name: '1/50',
         price: basePrice,
         available: i % 11 === 0 ? 0 : 3 + Math.floor(rand() * 20),
         maxPerOrder: 5,
       },
       {
         id: `${id}-gold`,
-        name: 'Gold',
+        name: '1/10',
         price: (Number(basePrice) * 2).toFixed(3),
         // Algumas edições douradas esgotadas para exercitar "edição indisponível"
         available: i % 4 === 0 ? 0 : 1 + Math.floor(rand() * 4),
@@ -65,21 +87,44 @@ export function buildNfts(): Nft[] {
       },
       {
         id: `${id}-legend`,
-        name: 'Legendary',
+        name: '1/1',
         price: (Number(basePrice) * 5).toFixed(3),
         available: i % 3 === 0 ? 1 : 0,
         maxPerOrder: 1,
       },
     ]
     const availablePrices = editions.filter((e) => e.available > 0).map((e) => e.price)
+    // Metadados derivados do índice (sem consumir o PRNG): preços, estoque e
+    // curtidas continuam determinísticos e independentes destes campos.
+    const tokenNumber = String((i * 37) % 1000).padStart(4, '0')
+    const ratingCount = 7 + ((i * 5) % 23)
+    const ratingAverage = [4.8, 4.6, 5, 4.4, 4.9, 4.7][i % 6]
+    const reviews = [0, 1, 2].map((k) => ({
+      id: `${id}-review-${k + 1}`,
+      author: REVIEWERS[(i + k * 2) % REVIEWERS.length],
+      rating: k === 2 && ratingAverage < 4.7 ? 4 : 5,
+      comment: REVIEW_COMMENTS[(i + k) % REVIEW_COMMENTS.length],
+      createdAt: new Date(FIXTURE_EPOCH - (i + k * 3) * 43_200_000).toISOString(),
+    }))
     nfts.push({
       id,
-      name: `${ADJECTIVES[i % ADJECTIVES.length]} ${NOUNS[i % NOUNS.length]} #${1000 + i * 7}`,
+      name: `${ADJECTIVES[i % ADJECTIVES.length]} ${NOUNS[i % NOUNS.length]} #${tokenNumber.slice(1)}`,
+      tokenId: `#${tokenNumber}`,
       collection: COLLECTIONS[i % COLLECTIONS.length],
       creator: CREATORS[i % CREATORS.length],
       description:
-        'Uma peça única da coleção, criada à mão e cunhada on-chain. Cada edição concede acesso exclusivo à comunidade e a drops futuros.',
-      category: CATEGORIES[i % CATEGORIES.length],
+        'Um colecionável digital finalizado à mão, verificado na rede, com arte desbloqueável e acesso para colecionadores.',
+      attributes: [
+        ATTRIBUTE_POOL[i % ATTRIBUTE_POOL.length],
+        ATTRIBUTE_POOL[(i * 3 + 1) % ATTRIBUTE_POOL.length],
+        RARITY_ATTRIBUTE[rarity],
+      ],
+      contractAddress: contractFor(i),
+      royaltyPercent: 5,
+      rating: { average: ratingAverage, count: ratingCount },
+      reviews,
+      // Desalinha categoria e ciclo de imagens: cada coleção reúne artes variadas
+      category: CATEGORIES[(i + Math.floor((i - 1) / IMAGE_COUNT)) % CATEGORIES.length],
       rarity,
       chain: CHAINS[i % CHAINS.length],
       images: [nftImage(n), nftImage(n + 3), nftImage(n + 6), nftImage(n + 9)],
@@ -156,6 +201,6 @@ export const COUPONS: Coupon[] = [
 export const NETWORK_FEES: Record<Chain, string> = {
   ethereum: '0.0042',
   polygon: '0.0003',
-  arbitrum: '0.0008',
+  solana: '0.0008',
 }
 
