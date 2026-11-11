@@ -12,8 +12,8 @@ export const accountKeys = {
 export function useMe() {
   return useQuery({
     queryKey: accountKeys.me,
-    queryFn: async () => {
-      const { data } = await api.get<User>('/me')
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<User>('/me', { signal })
       return data
     },
   })
@@ -49,8 +49,8 @@ export function useChangePassword() {
 export function useWallets() {
   return useQuery({
     queryKey: accountKeys.wallets,
-    queryFn: async () => {
-      const { data } = await api.get<Wallet[]>('/wallets')
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<Wallet[]>('/wallets', { signal })
       return data
     },
   })

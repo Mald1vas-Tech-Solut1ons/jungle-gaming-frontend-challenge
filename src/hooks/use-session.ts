@@ -19,8 +19,8 @@ export function useSession() {
   const token = getToken()
   return useQuery({
     queryKey: sessionKeys.session,
-    queryFn: async (): Promise<User | null> => {
-      const { data } = await api.get<Session>('/auth/session')
+    queryFn: async ({ signal }): Promise<User | null> => {
+      const { data } = await api.get<Session>('/auth/session', { signal })
       return data.user
     },
     enabled: !!token,

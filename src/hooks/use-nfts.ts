@@ -14,7 +14,7 @@ export const nftKeys = {
 export function useNftList(params: NftListParams) {
   return useQuery({
     queryKey: nftKeys.list(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const qs = new URLSearchParams()
       if (params.q) qs.set('q', params.q)
       if (params.category?.length) qs.set('category', params.category.join(','))
@@ -26,7 +26,7 @@ export function useNftList(params: NftListParams) {
       if (params.sort) qs.set('sort', params.sort)
       if (params.page) qs.set('page', String(params.page))
       if (params.pageSize) qs.set('pageSize', String(params.pageSize))
-      const { data } = await api.get<Paginated<Nft>>('/nfts', { params: qs })
+      const { data } = await api.get<Paginated<Nft>>('/nfts', { params: qs, signal })
       return data
     },
     placeholderData: (previous) => previous, // mantém a página anterior visível entre trocas (sem flicker)
@@ -37,8 +37,8 @@ export function useNftList(params: NftListParams) {
 export function useNftDetail(id: string) {
   return useQuery({
     queryKey: nftKeys.detail(id),
-    queryFn: async () => {
-      const { data } = await api.get<Nft>(`/nfts/${id}`)
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<Nft>(`/nfts/${id}`, { signal })
       return data
     },
     enabled: !!id,
@@ -50,8 +50,8 @@ export function useFavorites() {
   const token = getToken()
   return useQuery({
     queryKey: nftKeys.favorites,
-    queryFn: async () => {
-      const { data } = await api.get<FavoritesResponse>('/favorites')
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<FavoritesResponse>('/favorites', { signal })
       return data
     },
     enabled: !!token,

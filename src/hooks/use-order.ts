@@ -34,8 +34,8 @@ export function useQuote() {
 export function useOrders(status?: string) {
   return useQuery({
     queryKey: [...orderKeys.list, status ?? 'all'],
-    queryFn: async () => {
-      const { data } = await api.get<Order[]>('/orders', { params: status ? { status } : undefined })
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<Order[]>('/orders', { params: status ? { status } : undefined, signal })
       return data
     },
   })
@@ -49,8 +49,8 @@ export function useOrders(status?: string) {
 export function useOrderDetail(id: string) {
   return useQuery({
     queryKey: orderKeys.detail(id),
-    queryFn: async () => {
-      const { data } = await api.get<Order>(`/orders/${id}`)
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<Order>(`/orders/${id}`, { signal })
       return data
     },
     enabled: !!id,

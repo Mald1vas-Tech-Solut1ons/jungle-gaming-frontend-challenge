@@ -16,8 +16,8 @@ export const cartKeys = {
 export function useCart() {
   return useQuery({
     queryKey: cartKeys.cart,
-    queryFn: async () => {
-      const { data } = await api.get<Cart>('/cart')
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<Cart>('/cart', { signal })
       return data
     },
     staleTime: 0, // carrinho sempre fresco

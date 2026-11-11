@@ -79,7 +79,9 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByTestId('login-password').fill(password)
   await page.getByTestId('login-submit').click()
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByTestId('header-logout')).toBeVisible()
+  // Sessão estabelecida (header-logout só é visível em viewports largas —
+  // em 768px a navegação desktop fica escondida no menu)
+  await expect.poll(async () => isLoggedIn(page)).toBe(true)
 }
 
 /** Sessão ativa? (token presente no localStorage). */
