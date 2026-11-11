@@ -8,7 +8,7 @@ import { addItemToCartApi, fillCollector, login, setup, USERS } from './helpers'
  * + reset + fixtures fixas.
  *
  * Tolerância cross-platform: as baselines são geradas em Windows e o CI roda
- * em Linux — a rasterização do texto (Montserrat) difere ~1% entre SOs mesmo
+ * em Linux — a rasterização do texto (Roboto Mono) difere ~1% entre SOs mesmo
  * com a mesma fonte. `maxDiffPixelRatio: 0.02` (2%) aceita essa variância de
  * antialiasing e continua reprovando regressões reais de layout/cor/estrutura
  * (que mudam dezenas de % dos pixels). Ver ARCHITECTURE §12.

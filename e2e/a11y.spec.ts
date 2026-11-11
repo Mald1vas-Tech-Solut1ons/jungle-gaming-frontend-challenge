@@ -76,7 +76,9 @@ test('validação do checkout: campos do colecionador com erros associados', asy
   await expect(page.getByTestId('checkout-fullName')).toHaveAttribute('aria-describedby', 'checkout-fullName-error')
   await expect(page.locator('#checkout-fullName-error')).toHaveText('Informe o nome completo.')
   await expect(page.locator('#checkout-email-error')).toHaveText('Informe um e-mail válido.')
-  await expect(page.locator('#checkout-country-error')).toHaveText('Selecione o país.')
+  await expect(page.locator('#checkout-username-error')).toContainText('Informe um nome de usuário')
+  // Foco levado ao primeiro campo inválido
+  await expect(page.getByTestId('checkout-fullName')).toBeFocused()
 
   // Preencher remove os erros e libera o envio
   await fillCollector(page)

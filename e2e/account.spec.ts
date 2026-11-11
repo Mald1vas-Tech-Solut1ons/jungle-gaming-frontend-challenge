@@ -39,7 +39,7 @@ test('perfil: nome persiste após refresh; avatar é enviado e mantido', async (
   // Persistência após refresh
   await page.reload()
   await expect(page.getByTestId('profile-name')).toHaveValue('Ana Selva')
-  await expect(page.locator('img[src^="data:image"]')).toBeVisible()
+  await expect(page.locator('main img[src^="data:image"]')).toBeVisible()
 })
 
 test('senha: troca e re-login com a nova senha', async ({ page }) => {

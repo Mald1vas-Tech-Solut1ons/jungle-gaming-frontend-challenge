@@ -65,7 +65,7 @@ test('compra completa: do catálogo ao recibo confirmado com tx hash', async ({ 
   expect(tx!.trim()).toMatch(/^0x[0-9a-f]{64}$/i)
 
   // Recibo preserva o snapshot da cotação
-  const receiptTotal = parseEth(await page.locator('[data-testid="order-receipt"] dl dd').last().textContent())
+  const receiptTotal = parseEth(await page.getByTestId('receipt-total').textContent())
   expect(receiptTotal).toBeCloseTo(quoteTotal, 4)
   await expect(page.getByTestId('order-receipt')).toContainText('Ana Colecionadora')
   await expect(page.getByTestId('order-receipt')).toContainText('MetaMask principal')
@@ -158,7 +158,7 @@ test('edição de quantidade no detalhe respeita o limite antes do carrinho', as
   await plus.click()
   await expect(input).toHaveValue('2')
 
-  // Standard da nft-001: máx. 5 por pedido → botão desabilita no limite
+  // Edição 1/50 da nft-001: máx. 5 por pedido → botão desabilita no limite
   for (let i = 0; i < 3; i++) await plus.click()
   await expect(input).toHaveValue('5')
   await expect(plus).toBeDisabled()

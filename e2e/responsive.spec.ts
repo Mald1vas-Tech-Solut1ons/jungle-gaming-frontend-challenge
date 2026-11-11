@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { setup } from './helpers'
+import { openFilters, openSearch, setup } from './helpers'
 
 /**
  * Área 8 do enunciado exige avaliar 390, 768 e 1440px. O tablet (768×1024)
@@ -28,17 +28,19 @@ test('tablet 768px: sem overflow horizontal nas telas principais', async ({ page
   }
 })
 
-test('tablet 768px: catálogo navegável com sidebar empilhada e filtros funcionais', async ({ page }) => {
+test('tablet 768px: catálogo navegável com filtros em gaveta', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('nft-card').first()).toBeVisible()
 
-  // Sidebar vira bloco acima da grade (não lateral) — filtros continuam combináveis
+  // Sidebar vira gaveta (botão "Filtros") — filtros continuam combináveis
+  const closeFilters = await openFilters(page)
   await page.getByTestId('filter-rarity-legendary').click()
   await expect(page).toHaveURL(/rarity/)
+  await closeFilters()
   await expect(page.getByTestId('nft-card').first()).toBeVisible()
 
-  // Busca + ordenação na mesma largura
-  await page.getByTestId('search-input').fill('ape')
+  // Busca pelo header na mesma largura
+  await (await openSearch(page)).fill('ape')
   await expect(page.getByTestId('empty-state').or(page.getByTestId('nft-card').first())).toBeVisible()
 })
 

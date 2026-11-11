@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { parseEth, searchParam, setScenario, setup, DEFAULT_LATENCY } from './helpers'
+import { openSearch, parseEth, searchParam, setScenario, setup, DEFAULT_LATENCY } from './helpers'
 
 /**
  * Área 1: busca, filtros combinados, ordenação e paginação com estado na URL
@@ -9,7 +9,7 @@ import { parseEth, searchParam, setScenario, setup, DEFAULT_LATENCY } from './he
 
 const PAGE_SIZE = 12
 
-/** O hero também renderiza cards (`nft-card`) — escopo sempre no grid do catálogo. */
+/** Vitrines e destaques também renderizam cards — escopo sempre no grid do catálogo. */
 function grid(page: Page) {
   return page.getByTestId('nft-grid')
 }
@@ -27,7 +27,8 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('busca por texto reflete na URL e filtra o catálogo', async ({ page }) => {
-  await page.getByTestId('search-input').fill('Cosmic')
+  const search = await openSearch(page)
+  await search.fill('Cosmic')
   await expect(page).toHaveURL(/[?&]q=Cosmic/)
   // Debounce de 300ms aplica a busca
   await expect(async () => {
@@ -37,24 +38,24 @@ test('busca por texto reflete na URL e filtra o catálogo', async ({ page }) => 
   }).toPass({ timeout: 8000 })
 
   // Limpar a busca volta ao catálogo completo (12 por página)
-  await page.getByTestId('search-input').fill('')
+  await search.fill('')
   await expect(async () => {
     expect(await gridCount(page)).toBe(PAGE_SIZE)
   }).toPass({ timeout: 8000 })
 })
 
 test('filtros combinados (categoria + raridade + rede) na URL e no resultado', async ({ page }) => {
-  await page.getByTestId('filter-category-gaming').click()
-  await expect.poll(() => searchParam(page, 'category')).toEqual(['gaming'])
+  await page.getByTestId('filter-category-art').click()
+  await expect.poll(() => searchParam(page, 'category')).toEqual(['art'])
   await page.getByTestId('filter-rarity-legendary').click()
   await expect.poll(() => searchParam(page, 'rarity')).toEqual(['legendary'])
-  await page.getByTestId('filter-chain-polygon').click()
-  await expect.poll(() => searchParam(page, 'chain')).toEqual(['polygon'])
+  await page.getByTestId('filter-chain-solana').click()
+  await expect.poll(() => searchParam(page, 'chain')).toEqual(['solana'])
 
   // Confere os resultados contra a API (fonte da verdade)
   await expect(async () => {
     const expected = await page.evaluate(async () => {
-      const res = await fetch('/api/nfts?category=gaming&rarity=legendary&chain=polygon&pageSize=48')
+      const res = await fetch('/api/nfts?category=art&rarity=legendary&chain=solana&pageSize=48')
       const data = (await res.json()) as { items: { name: string }[] }
       return data.items.map((n) => n.name).sort()
     })
@@ -70,7 +71,7 @@ test('filtros combinados (categoria + raridade + rede) na URL e no resultado', a
 
   // Limpar filtros restaura o estado
   await page.getByTestId('clear-filters').first().click()
-  await expect(page).toHaveURL('http://localhost:4173/')
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/)
   await expect(async () => {
     expect(await gridCount(page)).toBe(PAGE_SIZE)
   }).toPass({ timeout: 8000 })
@@ -86,7 +87,7 @@ test('ordenação por preço crescente', async ({ page }) => {
     expect(await cards.count()).toBe(PAGE_SIZE)
     const prices: number[] = []
     for (const card of await cards.all()) {
-      prices.push(parseEth(await card.locator('p.text-primary').textContent()))
+      prices.push(parseEth(await card.getByTestId('nft-card-price').textContent()))
     }
     for (let i = 1; i < prices.length; i++) expect(prices[i]).toBeGreaterThanOrEqual(prices[i - 1])
   }).toPass({ timeout: 8000 })
@@ -110,11 +111,11 @@ test('paginação navega entre as 3 páginas e corrige página fora do alcance',
 })
 
 test('filtros sobrevivem a refresh e respondem ao histórico (voltar/avançar)', async ({ page }) => {
-  await page.getByTestId('filter-category-sports').click()
-  await expect.poll(() => searchParam(page, 'category')).toEqual(['sports'])
+  await page.getByTestId('filter-category-utility').click()
+  await expect.poll(() => searchParam(page, 'category')).toEqual(['utility'])
   // Nomes esperados direto da API (evita capturar o placeholder do grid)
   const expectedNames = await page.evaluate(async () => {
-    const res = await fetch('/api/nfts?category=sports&pageSize=48')
+    const res = await fetch('/api/nfts?category=utility&pageSize=48')
     const data = (await res.json()) as { items: { name: string }[] }
     return data.items.map((n) => n.name).sort()
   })
@@ -130,7 +131,7 @@ test('filtros sobrevivem a refresh e respondem ao histórico (voltar/avançar)',
 
   // Voltar no histórico desfaz o filtro
   await page.goBack()
-  await expect(page).toHaveURL('http://localhost:4173/')
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/)
   await expect(async () => {
     expect(await gridCount(page)).toBe(PAGE_SIZE)
   }).toPass({ timeout: 8000 })
@@ -198,7 +199,7 @@ test('cenário offline: erro no detalhe com retry e recuperação do catálogo',
 test('cenário offline: catálogo com cache vazio exibe erro e retry recupera', async ({ page }) => {
   test.setTimeout(120_000)
   // Resultado vazio conhecido → o cache do catálogo fica com lista vazia
-  await page.getByTestId('search-input').fill('zzzq-sem-resultado')
+  await (await openSearch(page)).fill('zzzq-sem-resultado')
   await expect(page.getByTestId('empty-state')).toBeVisible({ timeout: 10_000 })
 
   // Troca o cenário pelo Painel de Simulação (invalida as consultas do catálogo):

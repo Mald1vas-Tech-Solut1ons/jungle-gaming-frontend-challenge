@@ -158,7 +158,7 @@ export function parseEth(text: string | null): number {
 /** Preço do primeiro card visível no catálogo. */
 export async function firstCardPrice(page: Page): Promise<number> {
   const cards = page.getByTestId('nft-card')
-  const text = await cards.first().locator('p.text-primary').textContent()
+  const text = await cards.first().getByTestId('nft-card-price').textContent()
   return parseEth(text)
 }
 
@@ -180,15 +180,38 @@ export function toast(page: Page, text: string) {
   return page.locator('[data-sonner-toast]', { hasText: text })
 }
 
-/**
- * Preenche o formulário do colecionador no checkout com dados válidos
- * (e o país 'Brasil' — primeiro da lista).
- */
+/** Preenche o perfil do colecionador no checkout com dados válidos. */
 export async function fillCollector(page: Page, name = 'Ana Colecionadora', email = USERS.ana.email) {
   await page.getByTestId('checkout-fullName').fill(name)
+  await page.getByTestId('checkout-username').fill('ana.nft')
   await page.getByTestId('checkout-email').fill(email)
-  await page.getByTestId('checkout-country').click()
-  await page.getByRole('option', { name: 'Brasil' }).click()
+}
+
+/**
+ * Campo de busca do catálogo. No desktop/tablet ele fica recolhido atrás da
+ * lupa do header; no mobile é a barra fixa do topo da home.
+ */
+export async function openSearch(page: Page) {
+  const input = page.getByTestId('search-input')
+  if (!(await input.isVisible())) await page.getByTestId('header-search').click()
+  await expect(input).toBeVisible()
+  return input
+}
+
+/**
+ * Painel de filtros. No desktop (≥ 1024px) é a sidebar sempre visível; em
+ * telas menores abre na gaveta (botão "Filtros"). Retorna uma função que
+ * fecha a gaveta quando ela foi aberta.
+ */
+export async function openFilters(page: Page): Promise<() => Promise<void>> {
+  const trigger = page.getByTestId('filters-open')
+  if (!(await trigger.isVisible())) return async () => {}
+  await trigger.click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  return async () => {
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  }
 }
 
 /** Vai para o checkout com o carrinho e formulário prontos (sem enviar). */

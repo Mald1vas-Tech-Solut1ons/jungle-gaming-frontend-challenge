@@ -8,6 +8,9 @@ import { defineConfig, devices } from '@playwright/test'
  * Cada teste ganha um contexto novo (localStorage limpo → cenário default) e
  * restaura o estado conhecido via `POST /api/__mock/reset` no beforeEach.
  */
+/** Porta do preview usado nos testes (sobrescreva com E2E_PORT se a 4173 estiver ocupada). */
+const PORT = Number(process.env.E2E_PORT ?? 4173)
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -21,7 +24,7 @@ export default defineConfig({
   snapshotPathTemplate: '{testDir}/snapshots/{arg}{ext}',
 
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -45,8 +48,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run preview -- --port 4173 --strictPort',
-    url: 'http://localhost:4173',
+    command: `npm run preview -- --port ${PORT} --strictPort`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

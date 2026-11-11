@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('quantidades: stepper respeita o máximo por pedido (maxPerOrder)', async ({ page }) => {
-  await addItemToCartApi(page, 'nft-001') // Standard: máx. 5 por pedido
+  await addItemToCartApi(page, 'nft-001') // edição 1/50: máx. 5 por pedido
   await page.goto('/cart')
   await expect(page.getByTestId('cart-item')).toHaveCount(1)
 
@@ -109,6 +109,6 @@ test('migração guest→login: itens do visitante são preservados ao autentica
   await page.goto('/cart')
   await expect(page.getByTestId('cart-item')).toHaveCount(2)
   const names = await page.locator('[data-testid="cart-item"] a').allTextContents()
-  expect(names.join('|')).toContain('Golden Monke') // nft-001
-  expect(names.join('|')).toContain('Bored Gorilla') // nft-002
+  expect(names.join('|')).toContain('Golden Nomad') // nft-001
+  expect(names.join('|')).toContain('Emerald Vessel') // nft-002
 })

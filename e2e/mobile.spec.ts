@@ -1,18 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
-import { fillCollector, searchParam, setup, USERS } from './helpers'
+import { fillCollector, openFilters, searchParam, setup, USERS } from './helpers'
 
 /**
- * Fluxos principais (áreas 1, 5 e 6) em viewport mobile 390×844.
- * Navegação pelo menu hambúrguer (o header colapsa abaixo de md).
+ * Fluxos principais (áreas 1, 5 e 6) em viewport mobile 390×844, com a
+ * navegação do layout mobile: barra inferior na home e barras de topo
+ * (voltar, carrinho) nas telas internas.
  */
 
-/** Abre o menu (hambúrguer) e clica em um link dentro do sheet. */
-async function tapMenu(page: Page, testId: string) {
-  await page.getByTestId('header-menu').click()
-  await page.locator('[role="dialog"]').getByTestId(testId).click()
-}
-
-/** Grid do catálogo (o hero também renderiza `nft-card`). */
+/** Grid do catálogo (vitrines também renderizam `nft-card`). */
 function grid(page: Page) {
   return page.getByTestId('nft-grid')
 }
@@ -34,13 +29,15 @@ test('mobile — área 1: busca, filtro e paginação no catálogo', async ({ pa
   }).toPass({ timeout: 8000 })
   await page.getByTestId('search-input').fill('')
 
-  // Filtro por categoria
+  // Filtro por categoria (gaveta inferior)
+  const closeFilters = await openFilters(page)
   await page.getByTestId('filter-category-gaming').click()
   await expect.poll(() => searchParam(page, 'category')).toEqual(['gaming'])
   await expect(async () => {
     expect(await grid(page).getByTestId('nft-card').count()).toBeGreaterThan(0)
   }).toPass({ timeout: 8000 })
   await page.getByTestId('clear-filters').first().click()
+  await closeFilters()
 
   // Paginação (36 itens → 3 páginas de 12)
   await expect(async () => {
@@ -50,14 +47,14 @@ test('mobile — área 1: busca, filtro e paginação no catálogo', async ({ pa
   await expect(page.getByTestId('page-indicator')).toHaveText('Página 2 de 3')
 })
 
-test('mobile — área 5: carrinho via menu (adicionar, quantidade, remover)', async ({ page }) => {
+test('mobile — área 5: carrinho pela barra de topo (adicionar, quantidade, remover)', async ({ page }) => {
   // Detalhe → adicionar ao carrinho
   await page.goto('/nft/nft-001')
   await page.getByTestId('add-to-cart').click()
   await expect(page.getByTestId('cart-count')).toHaveText('1')
 
-  // Menu → Carrinho
-  await tapMenu(page, 'header-cart')
+  // Barra de topo do detalhe → Carrinho
+  await page.getByTestId('header-cart').click()
   await expect(page).toHaveURL(/\/cart/)
   await expect(page.getByTestId('cart-item')).toHaveCount(1)
 
@@ -75,8 +72,8 @@ test('mobile — área 5: carrinho via menu (adicionar, quantidade, remover)', a
 
 test('mobile — área 6: compra completa até o recibo confirmado', async ({ page }) => {
   test.setTimeout(90_000)
-  // Login via menu
-  await tapMenu(page, 'header-login')
+  // Login pela barra inferior
+  await page.getByTestId('header-login').click()
   await expect(page).toHaveURL(/\/login/)
   await page.getByTestId('login-email').fill(USERS.ana.email)
   await page.getByTestId('login-password').fill(USERS.ana.password)
@@ -89,7 +86,7 @@ test('mobile — área 6: compra completa até o recibo confirmado', async ({ pa
   await expect(page.getByTestId('cart-count')).toHaveText('1')
 
   // Carrinho → pagamento
-  await tapMenu(page, 'header-cart')
+  await page.getByTestId('header-cart').click()
   await expect(page.getByTestId('cart-item')).toHaveCount(1)
   await page.getByTestId('checkout-button').click()
   await expect(page.getByTestId('checkout-fullName')).toBeVisible()
