@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Leaf, LogIn, LogOut, Menu, UserRound, Wallet } from 'lucide-react'
+import { LogIn, LogOut, Menu, Search, ShoppingCart, UserRound, Wallet } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useCartCount } from '@/hooks/use-cart'
@@ -9,10 +10,9 @@ import { cn } from '@/lib/utils'
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2" aria-label="Jungle Marketplace — início" data-testid="header-logo">
-      <Leaf className="size-6 text-primary" aria-hidden="true" />
-      <span className="display-title text-foreground">
-        Jungle<span className="text-primary">.</span>
+    <Link to="/" className="flex items-center" aria-label="Kurio Marketplace — início" data-testid="header-logo">
+      <span className="logo-kurio text-2xl text-foreground">
+        KURI<span className="text-primary">O</span>
       </span>
     </Link>
   )
@@ -24,33 +24,64 @@ function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: 
   const cartCount = useCartCount()
   return (
     <nav className={cn('flex items-center gap-1', className)} aria-label="Navegação principal">
-      <Link to="/" className="rounded-md px-3 py-2 text-sm hover:bg-surface" activeProps={{ className: 'text-primary' }} onClick={onNavigate}>
-        Início
+      <Link to="/" className="rounded-md px-3 py-2 text-sm font-medium hover:text-accent" activeProps={{ className: 'text-accent' }} onClick={onNavigate}>
+        Inicio
       </Link>
       <Link
+        to="/"
+        hash="catalogo"
+        className="rounded-md px-3 py-2 text-sm font-medium hover:text-accent"
+        activeOptions={{ exact: true }}
+        onClick={onNavigate}
+      >
+        Mercado
+      </Link>
+      {['Criadores', 'Aprenda'].map((label) => (
+        <button
+          key={label}
+          type="button"
+          className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium hover:text-accent"
+          onClick={() => {
+            toast.info(`“${label}” é uma página editorial fora do escopo desta entrega.`)
+            onNavigate?.()
+          }}
+        >
+          {label}
+        </button>
+      ))}
+      <Link
         to="/cart"
-        className="relative rounded-md px-3 py-2 text-sm hover:bg-surface"
-        activeProps={{ className: 'text-primary' }}
+        className="relative ml-2 rounded-md p-2 text-accent hover:bg-surface"
         onClick={onNavigate}
         data-testid="header-cart"
+        aria-label={`Carrinho${cartCount > 0 ? `, ${cartCount} itens` : ''}`}
       >
-        Carrinho
+        <ShoppingCart className="size-5" aria-hidden="true" />
         {cartCount > 0 && (
           <span
             data-testid="cart-count"
             className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
-            aria-label={`${cartCount} itens no carrinho`}
+            aria-hidden="true"
           >
             {cartCount}
           </span>
         )}
       </Link>
+      <Link
+        to="/"
+        hash="catalogo"
+        className="rounded-md p-2 text-foreground hover:bg-surface"
+        aria-label="Buscar NFTs"
+        onClick={onNavigate}
+      >
+        <Search className="size-5" aria-hidden="true" />
+      </Link>
       {user ? (
         <>
           <Link
             to="/profile"
-            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm hover:bg-surface"
-            activeProps={{ className: 'text-primary' }}
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium hover:text-accent"
+            activeProps={{ className: 'text-accent' }}
             onClick={onNavigate}
             data-testid="header-profile"
           >
@@ -59,8 +90,8 @@ function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: 
           </Link>
           <Link
             to="/wallets"
-            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm hover:bg-surface"
-            activeProps={{ className: 'text-primary' }}
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium hover:text-accent"
+            activeProps={{ className: 'text-accent' }}
             onClick={onNavigate}
             data-testid="header-wallets"
           >
@@ -80,8 +111,8 @@ function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: 
           </Button>
         </>
       ) : (
-        <Button asChild variant="outline" size="sm" data-testid="header-login">
-          <Link to="/login" className="flex items-center gap-1.5" onClick={onNavigate}>
+        <Button asChild size="sm" className="ml-3" data-testid="header-login">
+          <Link to="/login" onClick={onNavigate}>
             <LogIn className="size-4" aria-hidden="true" />
             Entrar
           </Link>
@@ -94,13 +125,13 @@ function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: 
 export function Header() {
   const [open, setOpen] = useState(false)
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
+    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur">
+      <div className="mx-auto flex h-[90px] w-full max-w-[1200px] items-center justify-between gap-4 px-4 xl:px-0">
         <Logo />
-        <div className="hidden items-center md:flex">
+        <div className="hidden items-center lg:flex">
           <NavLinks />
         </div>
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" aria-label="Abrir menu" data-testid="header-menu">

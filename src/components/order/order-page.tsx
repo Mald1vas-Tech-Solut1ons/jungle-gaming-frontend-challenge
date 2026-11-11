@@ -43,8 +43,13 @@ export function OrderPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="display-title text-foreground">Pedido</h1>
+      <header className="flex flex-col items-center gap-2 text-center">
+        {order.status === 'confirmed' && (
+          <>
+            <p className="display-title text-4xl text-accent">Thank you</p>
+            <p className="text-sm text-muted-foreground">Seus NFTs agora estão na sua carteira.</p>
+          </>
+        )}
         <p className="font-mono text-xs text-muted-foreground">{order.id}</p>
       </header>
 

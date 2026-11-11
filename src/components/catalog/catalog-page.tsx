@@ -86,99 +86,101 @@ export function CatalogPage() {
   const activeFilterCount =
     (q.trim() !== '' ? 1 : 0) + categories.length + rarities.length + chains.length + (sort !== 'recent' ? 1 : 0)
 
-  const loadingGrid = data === undefined
+  const loadingGrid = data === undefined && !error
   const isEmpty = data !== undefined && data.items.length === 0 && !isFetching
 
   return (
     <div className="flex flex-col gap-8">
       <HeroSection />
 
-      <section id="catalogo" aria-labelledby="catalog-title" className="scroll-mt-20">
-        <h2 id="catalog-title" className="display-title text-muted-foreground">
+      <section id="catalogo" aria-labelledby="catalog-title" className="scroll-mt-24">
+        <h2 id="catalog-title" className="display-title text-xl text-foreground">
           Catálogo
         </h2>
 
         <div className="mt-4 flex flex-col gap-4">
           <SearchBox value={q} onApply={applyQuery} />
 
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-            <FilterBar
-              categories={categories}
-              rarities={rarities}
-              chains={chains}
-              activeCount={activeFilterCount}
-              showClear={hasActiveFilters && !isEmpty}
-              onToggleCategory={toggleCategory}
-              onToggleRarity={toggleRarity}
-              onToggleChain={toggleChain}
-              onClear={clearFilters}
-            />
+          <div className="mt-2 flex flex-col gap-6 xl:flex-row xl:items-start">
+            <aside
+              aria-label="Filtros do catálogo"
+              className="w-full shrink-0 rounded-xl bg-surface p-5 xl:sticky xl:top-24 xl:w-80"
+            >
+              <FilterBar
+                categories={categories}
+                rarities={rarities}
+                chains={chains}
+                activeCount={activeFilterCount}
+                showClear={hasActiveFilters && !isEmpty}
+                onToggleCategory={toggleCategory}
+                onToggleRarity={toggleRarity}
+                onToggleChain={toggleChain}
+                onClear={clearFilters}
+              />
+              <div className="mt-5">
+                <span id="sort-label" className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Ordenar por
+                </span>
+                <Select value={sort} onValueChange={changeSort}>
+                  <SelectTrigger data-testid="sort-select" aria-labelledby="sort-label">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </aside>
 
-            <div className="w-full shrink-0 xl:w-60">
-              <span id="sort-label" className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Ordenar por
-              </span>
-              <Select value={sort} onValueChange={changeSort}>
-                <SelectTrigger data-testid="sort-select" aria-labelledby="sort-label">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="min-w-0 flex-1">
+              {loadingGrid ? (
+                <>
+                  <p className="sr-only" role="status">
+                    Carregando catálogo…
+                  </p>
+                  <div data-testid="nft-grid" aria-busy="true" className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {Array.from({ length: PAGE_SIZE }, (_, index) => (
+                      <NftCardSkeleton key={index} />
+                    ))}
+                  </div>
+                </>
+              ) : error && (!data || data.items.length === 0) ? (
+                <ErrorState
+                  title="Não foi possível carregar o catálogo"
+                  message={normalizeError(error).message}
+                  onRetry={() => void refetch()}
+                />
+              ) : isEmpty ? (
+                <EmptyState
+                  message={
+                    hasActiveFilters
+                      ? 'Nada corresponde à sua busca. Ajuste os termos ou remova alguns filtros.'
+                      : 'Nenhum item disponível no catálogo agora. Volte em breve!'
+                  }
+                  onClear={clearFilters}
+                />
+              ) : (
+                <>
+                  <div data-testid="nft-grid" aria-busy={isFetching} className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {data.items.map((nft, index) => (
+                      <NftCard key={nft.id} nft={nft} priority={index === 0} />
+                    ))}
+                  </div>
+                  <Pagination
+                    page={data.page}
+                    totalPages={data.totalPages}
+                    onPrev={() => goToPage(Math.max(1, data.page - 1))}
+                    onNext={() => goToPage(Math.min(data.totalPages, data.page + 1))}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
-
-        {loadingGrid ? (
-          <>
-            <p className="sr-only" role="status">
-              Carregando catálogo…
-            </p>
-            <div data-testid="nft-grid" aria-busy="true" className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: PAGE_SIZE }, (_, index) => (
-                <NftCardSkeleton key={index} />
-              ))}
-            </div>
-          </>
-        ) : error && data.items.length === 0 ? (
-          <div className="mt-6">
-            <ErrorState
-              title="Não foi possível carregar o catálogo"
-              message={normalizeError(error).message}
-              onRetry={() => void refetch()}
-            />
-          </div>
-        ) : isEmpty ? (
-          <div className="mt-6">
-            <EmptyState
-              message={
-                hasActiveFilters
-                  ? 'Nada corresponde à sua busca. Ajuste os termos ou remova alguns filtros.'
-                  : 'Nenhum item disponível no catálogo agora. Volte em breve!'
-              }
-              onClear={clearFilters}
-            />
-          </div>
-        ) : (
-          <>
-            <div data-testid="nft-grid" aria-busy={isFetching} className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {data.items.map((nft) => (
-                <NftCard key={nft.id} nft={nft} />
-              ))}
-            </div>
-            <Pagination
-              page={data.page}
-              totalPages={data.totalPages}
-              onPrev={() => goToPage(Math.max(1, data.page - 1))}
-              onNext={() => goToPage(Math.min(data.totalPages, data.page + 1))}
-            />
-          </>
-        )}
       </section>
     </div>
   )

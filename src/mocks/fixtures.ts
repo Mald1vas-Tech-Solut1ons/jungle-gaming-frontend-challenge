@@ -8,7 +8,7 @@ import type { Chain, Nft, NftCategory, NftRarity, WalletProvider } from '@/api/c
 export const FIXTURE_EPOCH = Date.UTC(2026, 9, 1, 12, 0, 0) // 2026-10-01T12:00:00Z
 
 const IMAGE_COUNT = 12
-export const nftImage = (n: number) => `/nfts/ape-${String(((n - 1) % IMAGE_COUNT) + 1).padStart(2, '0')}.jpg`
+export const nftImage = (n: number) => `/nfts/ape-${String(((n - 1) % IMAGE_COUNT) + 1).padStart(2, '0')}.webp`
 
 const ADJECTIVES = ['Cosmic', 'Golden', 'Bored', 'Neon', 'Royal', 'Wild', 'Lazy', 'Cyber', 'Ancient', 'Lucky', 'Silent', 'Funky']
 const NOUNS = ['Ape', 'Monke', 'Gorilla', 'Primate', 'Chimp', 'Kong']

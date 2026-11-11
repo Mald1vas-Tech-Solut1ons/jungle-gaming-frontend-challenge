@@ -2,28 +2,33 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Design tokens — tema "jungle retro" extraído da prévia do Figma do desafio */
+/*
+ * Design tokens — lidos dos frames do Figma do desafio (Figma_files/SPEC.md).
+ * Paleta "Kurio": fundo quase-preto marrom-avermelhado, superfícies marrom
+ * escuro, texto creme, acento âmbar/laranja. Cores medidas por amostragem de
+ * pixels dos PNGs exportados.
+ */
 @theme {
-  --color-background: #1c120c;
-  --color-foreground: #f6ead9;
+  --color-background: #140d0a;
+  --color-foreground: #f5f1eb;
 
-  --color-card: #241610;
-  --color-card-foreground: #f6ead9;
+  --color-card: #241612;
+  --color-card-foreground: #f5f1eb;
 
-  --color-popover: #2a1b12;
-  --color-popover-foreground: #f6ead9;
+  --color-popover: #241612;
+  --color-popover-foreground: #f5f1eb;
 
-  --color-primary: #e8862e;
-  --color-primary-foreground: #1c120c;
+  --color-primary: #d28a4c;
+  --color-primary-foreground: #140d0a;
 
-  --color-secondary: #3a2617;
-  --color-secondary-foreground: #f6ead9;
+  --color-secondary: #38220f;
+  --color-secondary-foreground: #f5f1eb;
 
-  --color-muted: #32200f;
-  --color-muted-foreground: #c4ab8f;
+  --color-muted: #2f1d15;
+  --color-muted-foreground: #cfb28c;
 
-  --color-accent: #f2a65a;
-  --color-accent-foreground: #1c120c;
+  --color-accent: #e89b55;
+  --color-accent-foreground: #140d0a;
 
   --color-destructive: #e5484d;
   --color-destructive-foreground: #ffffff;
@@ -31,20 +36,20 @@
   --color-success: #4ade80;
   --color-warning: #fbbf24;
 
-  --color-border: #4a3220;
-  --color-input: #4a3220;
-  --color-ring: #f2a65a;
+  --color-border: #36261c;
+  --color-input: #36261c;
+  --color-ring: #e89b55;
 
-  --color-surface: #2a1b12;
-  --color-surface-2: #3a2617;
+  --color-surface: #241612;
+  --color-surface-2: #38220f;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 
-  --font-sans: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: 'Press Start 2P', 'Space Mono', ui-monospace, monospace;
+  --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -53,10 +58,6 @@ html {
 
 body {
   @apply bg-background text-foreground font-sans antialiased;
-  background-image:
-    radial-gradient(60rem 40rem at 110% -10%, rgb(232 134 46 / 0.07), transparent 60%),
-    radial-gradient(50rem 30rem at -20% 110%, rgb(232 134 46 / 0.05), transparent 60%);
-  background-attachment: fixed;
 }
 
 ::selection {
@@ -101,16 +102,25 @@ body {
   }
 }
 
-/* Utilidade: textura de pixel para cabeçalhos */
-.pixelated {
-  image-rendering: pixelated;
-}
-
-/* Título display compartilhado */
+/* Título display (estilo Figma: sans geométrica, bold, caixa alta) */
 .display-title {
   font-family: var(--font-display);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  line-height: 1.6;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
   text-transform: uppercase;
+}
+
+/* Logo Kurio: peso extremo, caixa alta */
+.logo-kurio {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* CTAs mobile com gradiente horizontal do Figma; botões desktop são chapados */
+@media (max-width: 767px) {
+  .bg-primary {
+    background-image: linear-gradient(90deg, #ce874b, #b77743);
+  }
 }

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatEth } from '@/lib/money'
 
-export function NftCard({ nft }: { nft: Nft }) {
+export function NftCard({ nft, priority = false }: { nft: Nft; priority?: boolean }) {
   return (
     <Card data-testid="nft-card" className="group relative flex flex-col overflow-hidden">
       <Link
@@ -20,7 +20,8 @@ export function NftCard({ nft }: { nft: Nft }) {
             alt={`NFT ${nft.name} da coleção ${nft.collection}`}
             width={640}
             height={480}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
           />
           <RarityBadge rarity={nft.rarity} className="absolute left-2 top-2 border-background/60 bg-background/85 backdrop-blur-sm" />

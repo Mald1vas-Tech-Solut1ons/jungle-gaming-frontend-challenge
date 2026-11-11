@@ -58,8 +58,11 @@ export function CartSummary({ quote, quotePending, itemsCount }: CartSummaryProp
       {loading && <p className="text-xs text-muted-foreground">Calculando totais…</p>}
 
       <Button asChild size="lg" className="w-full" data-testid="checkout-button" disabled={itemsCount === 0}>
-        <Link to="/checkout">Ir para pagamento</Link>
+        <Link to="/checkout">Conectar e finalizar</Link>
       </Button>
+      <Link to="/" search={{}} className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground">
+        Continuar explorando
+      </Link>
     </div>
   )
 }
