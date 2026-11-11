@@ -300,7 +300,6 @@ export interface Order {
   wallet: Pick<Wallet, 'id' | 'label' | 'provider' | 'address'>
   collector: CollectorInfo
   txHash: string | null
-  explorerUrl: string | null
   rejectionReason: string | null
   createdAt: string
   updatedAt: string

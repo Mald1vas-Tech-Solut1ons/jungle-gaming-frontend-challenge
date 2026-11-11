@@ -84,7 +84,6 @@ export function settleOrder(orderId: string, outcome?: 'confirmed' | 'rejected')
     o.updatedAt = new Date().toISOString()
     if (final === 'confirmed') {
       o.txHash = `0x${hashHex(o.id)}`
-      o.explorerUrl = `https://etherscan.mock/tx/${o.txHash}`
       // Remove do carrinho apenas os itens e quantidades comprados
       const cart = s.carts[`user:${o.userId}`]
       if (cart) {
@@ -385,7 +384,6 @@ export const commerceHandlers = [
       wallet: { id: wallet!.id, label: wallet!.label, provider: wallet!.provider, address: wallet!.address },
       collector: body.collector,
       txHash: null,
-      explorerUrl: null,
       rejectionReason: null,
       createdAt: nowIso,
       updatedAt: nowIso,

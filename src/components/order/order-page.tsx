@@ -1,5 +1,5 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { ExternalLink, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,7 @@ import { normalizeError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { OrderReceipt } from './order-receipt'
 import { OrderStatusBanner } from './order-status-banner'
+import { TransactionExplorer } from './transaction-explorer'
 
 const routeApi = getRouteApi('/orders/$orderId')
 
@@ -119,19 +120,7 @@ export function OrderPage() {
         <>
           <OrderReceipt order={order} />
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 px-6">
-            {confirmed && order.explorerUrl ? (
-              <Button asChild className="h-12 px-4 text-base">
-                <a href={order.explorerUrl} target="_blank" rel="noopener noreferrer">
-                  Ver no Etherscan
-                  <ExternalLink aria-hidden="true" />
-                  <span className="sr-only">(abre em nova aba; link simulado)</span>
-                </a>
-              </Button>
-            ) : (
-              <Button className="h-12 px-4 text-base" disabled>
-                Ver no Etherscan
-              </Button>
-            )}
+            <TransactionExplorer order={order} />
             <Button asChild variant="outline" className="h-12 px-4 text-base">
               <Link to="/" search={{}}>
                 Continuar explorando
