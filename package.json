@@ -15,8 +15,7 @@
     "audit:lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
-    "@fontsource/press-start-2p": "^5.3.0",
-    "@fontsource/space-mono": "^5.3.0",
+    "@fontsource/montserrat": "^5.3.0",
     "@radix-ui/react-avatar": "^1.3.1",
     "@radix-ui/react-checkbox": "^1.4.1",
     "@radix-ui/react-dialog": "^1.3.1",
@@ -52,6 +51,7 @@
     "lighthouse": "^13.6.0",
     "msw": "^2.15.0",
     "oxlint": "^1.90.0",
+    "sharp-cli": "^6.1.0",
     "tailwindcss": "^4.3.5",
     "typescript": "~7.0.2",
     "vite": "^8.3.6"
