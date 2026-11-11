@@ -87,7 +87,7 @@ test('expiração de sessão: próxima requisição autenticada encerra a sessã
     .waitForURL(/\/login/, { timeout: 8_000 })
     .catch(async () => {
       await page.evaluate(async () => {
-        const token = localStorage.getItem('kurio_token')
+        const token = localStorage.getItem('auth.token')
         await fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } })
       })
       await page.waitForURL(/\/login/, { timeout: 15_000 })
