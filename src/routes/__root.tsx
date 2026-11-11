@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header'
 import { NotFoundPage } from '@/components/layout/not-found'
 import { RealtimeToasts } from '@/components/layout/realtime-toasts'
 import { ScenarioPanel } from '@/components/layout/scenario-panel'
+import { SessionExpiryRedirect } from '@/components/layout/session-expiry-redirect'
 
 /** Restaura o scroll ao topo em troca de rota (sem âncoras). */
 function ScrollRestoration() {
@@ -37,6 +38,7 @@ function RootComponent() {
       {!isStandalone && <Footer />}
       <ScenarioPanel />
       <RealtimeToasts />
+      <SessionExpiryRedirect />
       <Toaster position="top-center" theme="dark" richColors closeButton />
     </div>
   )

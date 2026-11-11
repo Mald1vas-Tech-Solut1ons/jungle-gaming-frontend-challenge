@@ -31,3 +31,5 @@ reports/local
 *.sln
 *.sw?
 /Figma_files/
+
+.vercel
