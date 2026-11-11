@@ -3,12 +3,12 @@ import type { Chain, NftCategory, NftRarity, NftSort, WalletProvider } from '@/a
 /** Labels pt-BR centralizados (usados em filtros, badges e selects). */
 
 export const CATEGORY_LABELS: Record<NftCategory, string> = {
-  art: 'Arte',
-  gaming: 'Games',
+  art: 'Arte digital',
+  gaming: 'Jogos',
   collectibles: 'Colecionáveis',
   music: 'Música',
   photography: 'Fotografia',
-  sports: 'Esportes',
+  utility: 'Utilidade',
 }
 
 export const RARITY_LABELS: Record<NftRarity, string> = {
@@ -21,14 +21,14 @@ export const RARITY_LABELS: Record<NftRarity, string> = {
 export const CHAIN_LABELS: Record<Chain, string> = {
   ethereum: 'Ethereum',
   polygon: 'Polygon',
-  arbitrum: 'Arbitrum',
+  solana: 'Solana',
 }
 
 export const SORT_LABELS: Record<NftSort, string> = {
-  recent: 'Mais recentes',
+  recent: 'Listados recentemente',
   price_asc: 'Menor preço',
   price_desc: 'Maior preço',
-  popular: 'Mais populares',
+  popular: 'Em alta',
   name: 'Nome (A–Z)',
 }
 

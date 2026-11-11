@@ -73,9 +73,9 @@ export interface ChangePasswordRequest {
 }
 
 // ---------- NFTs ----------
-export type NftCategory = 'art' | 'gaming' | 'collectibles' | 'music' | 'photography' | 'sports'
+export type NftCategory = 'art' | 'gaming' | 'collectibles' | 'music' | 'photography' | 'utility'
 export type NftRarity = 'common' | 'rare' | 'epic' | 'legendary'
-export type Chain = 'ethereum' | 'polygon' | 'arbitrum'
+export type Chain = 'ethereum' | 'polygon' | 'solana'
 
 export interface NftEdition {
   id: string
@@ -87,12 +87,33 @@ export interface NftEdition {
   maxPerOrder: number
 }
 
+export interface NftReview {
+  id: string
+  author: string
+  /** Nota de 1 a 5 */
+  rating: number
+  comment: string
+  createdAt: string
+}
+
 export interface Nft {
   id: string
   name: string
+  /** Identificador do token na coleção, ex.: '#0042' */
+  tokenId: string
   collection: string
   creator: string
   description: string
+  /** Traços exibidos em "Atributos" */
+  attributes: string[]
+  /** Endereço (fictício) do contrato inteligente */
+  contractAddress: string
+  /** Percentual de direitos autorais do criador nas vendas secundárias */
+  royaltyPercent: number
+  /** Média e total de avaliações de colecionadores */
+  rating: { average: number; count: number }
+  /** Avaliações mais recentes (amostra exibida no detalhe) */
+  reviews: NftReview[]
   category: NftCategory
   rarity: NftRarity
   chain: Chain
@@ -128,6 +149,23 @@ export interface Paginated<T> {
   pageSize: number
   total: number
   totalPages: number
+}
+
+/**
+ * Contagens para a barra de filtros. Cada grupo é calculado sobre o resultado
+ * com TODOS os outros filtros aplicados (busca incluída), menos o do próprio
+ * grupo — assim o número ao lado de uma opção é o que ela traria se marcada.
+ */
+export interface NftFacets {
+  category: Record<NftCategory, number>
+  rarity: Record<NftRarity, number>
+  chain: Record<Chain, number>
+  /** Menor e maior preço do catálogo (limites do seletor de faixa) */
+  price: { min: EthString; max: EthString }
+}
+
+export interface NftListResponse extends Paginated<Nft> {
+  facets: NftFacets
 }
 
 // ---------- Favoritos ----------
@@ -229,11 +267,15 @@ export interface WalletConnectResponse {
 // ---------- Pedidos ----------
 export type OrderStatus = 'pending' | 'confirmed' | 'rejected'
 
+/** Perfil do colecionador no pagamento (campos do frame "Pagamento"). */
 export interface CollectorInfo {
+  /** Nome de exibição */
   fullName: string
+  /** Nome de usuário público (letras minúsculas, números, ponto e sublinhado) */
+  username: string
   email: string
-  country: string
-  document?: string
+  /** Observação do colecionador (opcional) */
+  note?: string
 }
 
 export interface CreateOrderRequest {

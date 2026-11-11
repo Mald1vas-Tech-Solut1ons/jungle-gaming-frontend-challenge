@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { FavoritesResponse, Nft, NftListParams, Paginated } from '@/api/contracts'
+import type { FavoritesResponse, Nft, NftListParams, NftListResponse } from '@/api/contracts'
 import { api, normalizeError } from '@/lib/api'
 import { getToken } from '@/lib/session'
 
@@ -26,7 +26,7 @@ export function useNftList(params: NftListParams) {
       if (params.sort) qs.set('sort', params.sort)
       if (params.page) qs.set('page', String(params.page))
       if (params.pageSize) qs.set('pageSize', String(params.pageSize))
-      const { data } = await api.get<Paginated<Nft>>('/nfts', { params: qs, signal })
+      const { data } = await api.get<NftListResponse>('/nfts', { params: qs, signal })
       return data
     },
     placeholderData: (previous) => previous, // mantém a página anterior visível entre trocas (sem flicker)
