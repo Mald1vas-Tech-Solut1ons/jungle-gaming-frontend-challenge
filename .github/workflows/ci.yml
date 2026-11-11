@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Regerar as baselines visuais no Linux (artefato visual-baselines) em vez de comparar'
+        type: boolean
+        default: false
 
 jobs:
   quality:
@@ -44,7 +49,21 @@ jobs:
       - name: Build
         run: npm run build
       - name: Run E2E suite
+        if: ${{ !inputs.update_snapshots }}
         run: npm run test:e2e
+      # Baselines são geradas no Windows; se a rasterização do Linux sair da
+      # tolerância (ARCHITECTURE §12), rode o workflow manualmente com
+      # update_snapshots=true e versione as imagens do artefato.
+      - name: Regenerate visual baselines (Linux)
+        if: ${{ inputs.update_snapshots }}
+        run: npx playwright test e2e/visual.spec.ts --update-snapshots
+      - name: Upload regenerated baselines
+        if: ${{ inputs.update_snapshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: e2e/snapshots/
+          retention-days: 14
       - name: Publish HTML report
         if: always()
         run: mkdir -p public/reports && cp -r playwright-report public/reports/playwright
