@@ -168,3 +168,30 @@ test('edição de quantidade no detalhe respeita o limite antes do carrinho', as
   await expect(page).toHaveURL(/\/cart/)
   await expect(page.getByTestId('cart-qty-input')).toHaveValue('5')
 })
+
+test('recibo confirmado: "Ver no Etherscan" abre o explorador simulado no app, sem link externo', async ({ page }) => {
+  await purchaseSetup(page)
+  await page.getByTestId('submit-order').click()
+  await expect(page).toHaveURL(/\/orders\/ord-\d+/, { timeout: 15_000 })
+  await expect(page.getByTestId('order-receipt')).toBeVisible({ timeout: 30_000 })
+
+  // O antigo link morto (etherscan.mock) foi removido: nenhuma âncora externa.
+  await expect(page.locator('a[href*="etherscan"]')).toHaveCount(0)
+  await expect(page.locator('a[target="_blank"]')).toHaveCount(0)
+
+  // O botão abre o diálogo in-app com a referência simulada.
+  const open = page.getByRole('button', { name: 'Ver no Etherscan' })
+  await expect(open).toBeEnabled()
+  await open.click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Explorador da transação')
+  await expect(dialog).toContainText('Confirmado')
+  await expect(dialog).toContainText(/0x[0-9a-f]{16}/)
+
+  // Fecha o diálogo e permanece na mesma rota (sem navegação para fora).
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await expect(page).toHaveURL(/\/orders\/ord-\d+/)
+})
