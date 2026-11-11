@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addItemToCartApi, isLoggedIn, login, logout, setScenario, setup, USERS } from './helpers'
+import { addItemToCartApi, isLoggedIn, login, logout, setup, USERS } from './helpers'
 
 /**
  * Área 3: cadastro, login, expiração de sessão, logout e troca de usuário
@@ -73,26 +73,16 @@ test('login válido entra na conta; credenciais erradas exibem alerta', async ({
 test('expiração de sessão: próxima requisição autenticada encerra a sessão e o retorno preserva o contexto', async ({ page }) => {
   await login(page, USERS.ana.email, USERS.ana.password)
 
-  // Ativa o cenário: a primeira requisição autenticada recebe 401
-  // SESSION_EXPIRED → token limpo + redirect automático para o login
-  // preservando a rota original.
-  await setScenario(page, 'session-expired')
-  await page.goto('/nft/nft-001')
+  // Arma o cenário NA PRÓPRIA navegação (?scenario=, lido no boot): armar via
+  // POST antes do goto deixava uma janela em que refetches ambientais da
+  // página anterior (TanStack Query refetchOnWindowFocus, sob paralelismo)
+  // podiam consumir o one-shot fora do alvo — sessão limpa sem redirect.
+  // No boot da página nova, a primeira requisição autenticada (carrinho do
+  // header) consome o cenário deterministicamente: 401 SESSION_EXPIRED →
+  // token limpo + redirect ao login preservando a rota.
+  await page.goto('/nft/nft-001?scenario=session-expired')
 
-  // O cenário é one-shot e a ordem de requisições varia com o timing da
-  // máquina (o carrinho do header pode consumi-lo no load — caminho local —
-  // ou não — caminho CI). Aceita os dois: se ainda estiver no detalhe,
-  // dispara um gatilho determinístico (/api/me) para consumir o 401.
-  await page
-    .waitForURL(/\/login/, { timeout: 8_000 })
-    .catch(async () => {
-      await page.evaluate(async () => {
-        const token = localStorage.getItem('auth.token')
-        await fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } })
-      })
-      await page.waitForURL(/\/login/, { timeout: 15_000 })
-    })
-
+  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 })
   expect(await isLoggedIn(page)).toBe(false)
   await expect(page.getByTestId('header-login')).toBeVisible()
 
