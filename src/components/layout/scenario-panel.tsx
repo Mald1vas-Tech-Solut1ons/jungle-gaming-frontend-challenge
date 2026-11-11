@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { FlaskConical, RefreshCcw, Wifi, WifiOff, Zap } from 'lucide-react'
 import { toast } from 'sonner'
+import { useMocksReady } from '@/lib/mocks-ready'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -41,6 +42,8 @@ const SCENARIO_HINTS: Record<string, string> = {
  * código. Só renderiza quando os mocks estão ativos (dev/demo).
  */
 export function ScenarioPanel() {
+  // Só aparece com o backend simulado no ar (os testes E2E usam o botão como sinal de app pronto)
+  const mocksReady = useMocksReady()
   const [open, setOpen] = useState(false)
   const [scenario, setScenario] = useState<string>('default')
   const [scenarios, setScenarios] = useState<Record<string, string>>({})
@@ -85,7 +88,7 @@ export function ScenarioPanel() {
     }
   }
 
-  if (!mocksEnabled) return null
+  if (!mocksEnabled || !mocksReady) return null
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -93,7 +96,7 @@ export function ScenarioPanel() {
         <Button
           variant="outline"
           size="icon"
-          className="fixed bottom-4 right-4 z-50 rounded-full bg-card/90 shadow-lg backdrop-blur"
+          className="fixed z-50 rounded-full bg-card/90 shadow-lg backdrop-blur max-md:left-0 max-md:top-1/2 max-md:size-9 max-md:-translate-y-1/2 max-md:rounded-l-none max-md:border-l-0 md:bottom-4 md:right-4"
           aria-label="Abrir painel de simulação"
           data-testid="scenario-panel-open"
         >
