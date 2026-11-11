@@ -1,12 +1,17 @@
 import type { NftRarity } from '@/api/contracts'
-import { Badge } from '@/components/ui/badge'
 import { RARITY_LABELS } from '@/lib/labels'
+import { cn } from '@/lib/utils'
 
-/** Badge de raridade no estilo Figma: fill âmbar, texto escuro, caixa alta. */
+/** Etiqueta de raridade do layout: faixa âmbar reta, texto escuro em caixa alta. */
 export function RarityBadge({ rarity, className }: { rarity: NftRarity; className?: string }) {
   return (
-    <Badge variant="default" className={`text-[10px] font-bold uppercase tracking-wider ${className ?? ''}`}>
+    <span
+      className={cn(
+        'inline-flex h-[26px] min-w-[68px] items-center bg-primary px-2.5 text-sm font-bold uppercase leading-none text-primary-foreground',
+        className,
+      )}
+    >
       {RARITY_LABELS[rarity]}
-    </Badge>
+    </span>
   )
 }
