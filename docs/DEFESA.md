@@ -83,7 +83,7 @@ Evidência: `src/mocks/browser.ts:13-28`, `src/mocks/realtime.ts:12-14`, `src/ap
 | Dedup/versão/reconciliação | `src/lib/socket.ts:44-56,117-121` |
 | Idempotência (cliente) | `src/hooks/use-order.ts:91-171` |
 | Idempotência (servidor) | `src/mocks/handlers/commerce.ts:273-285` |
-| 13 cenários | `src/mocks/scenarios.ts:10-24` |
+| 14 cenários | `src/mocks/scenarios.ts:10-24` |
 | Socket simulado | `src/mocks/realtime.ts:37-69` |
 | Fixtures determinísticas | `src/mocks/fixtures.ts:8,21-41` |
 | Sessão/barramento | `src/lib/session.ts:19-43` |
