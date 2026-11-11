@@ -11,7 +11,7 @@ import { normalizeError } from '@/lib/api'
 import { FieldError } from './field-error'
 import { emailError, nameError, passwordError, type FieldErrors } from './validators'
 
-export function RegisterForm() {
+export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
   const navigate = useNavigate()
   const register = useRegister()
   const [name, setName] = useState('')
@@ -47,7 +47,17 @@ export function RegisterForm() {
       { name: name.trim(), email: email.trim(), password },
       {
         onSuccess: () => {
-          void navigate({ to: '/' })
+          let target = '/'
+          const raw = redirectTo ?? ''
+          if (raw.startsWith('/')) target = raw
+          else {
+            try {
+              target = new URL(raw).pathname + new URL(raw).search || '/'
+            } catch {
+              target = '/'
+            }
+          }
+          void navigate({ to: target })
         },
         onError: (error) => {
           const apiError = normalizeError(error)

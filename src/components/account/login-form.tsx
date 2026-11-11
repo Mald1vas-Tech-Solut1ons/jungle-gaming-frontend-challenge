@@ -46,8 +46,21 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       { email: email.trim(), password },
       {
         onSuccess: () => {
-          // Valida para evitar open redirect: só navega em caminho interno.
-          const target = redirectTo?.startsWith('/') ? redirectTo : '/'
+          // Retorno ao fluxo anterior com proteção contra open redirect:
+          // aceita caminho interno ('/checkout') OU URL completa da mesma
+          // origem (os guards passam location.href) — extrai pathname+search.
+          let target = '/'
+          const raw = redirectTo ?? ''
+          if (raw.startsWith('/')) {
+            target = raw
+          } else {
+            try {
+              const url = new URL(raw)
+              target = url.pathname + url.search || '/'
+            } catch {
+              target = '/'
+            }
+          }
           void navigate({ to: target })
         },
         onError: (error) => {

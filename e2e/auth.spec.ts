@@ -70,21 +70,31 @@ test('login válido entra na conta; credenciais erradas exibem alerta', async ({
   await expect(page).toHaveURL(/\/login/)
 })
 
-test('expiração de sessão: próxima requisição autenticada encerra a sessão', async ({ page }) => {
+test('expiração de sessão: próxima requisição autenticada encerra a sessão e o retorno preserva o contexto', async ({ page }) => {
   await login(page, USERS.ana.email, USERS.ana.password)
 
-  // Ativa o cenário e dispara uma requisição autenticada (favoritar)
+  // Ativa o cenário: a primeira requisição autenticada (o carrinho do header,
+  // disparado no carregamento da página) recebe 401 SESSION_EXPIRED → token
+  // limpo + redirect automático para o login preservando a rota original.
   await setScenario(page, 'session-expired')
   await page.goto('/nft/nft-001')
-  await page.getByTestId('like-button').click()
 
-  // 401 SESSION_EXPIRED → token limpo → usuário volta a ser visitante
-  await expect(async () => {
-    expect(await isLoggedIn(page)).toBe(false)
-  }).toPass({ timeout: 8000 })
+  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 })
+  expect(await isLoggedIn(page)).toBe(false)
   await expect(page.getByTestId('header-login')).toBeVisible()
 
-  // Rota protegida agora redireciona para o login
+  const redirect = await page.evaluate(() => new URLSearchParams(window.location.search).get('redirect'))
+  expect(redirect).toContain('/nft/nft-001')
+
+  // Reautentica e RETOMA o fluxo de onde parou (contexto preservado)
+  await page.getByTestId('login-email').fill(USERS.ana.email)
+  await page.getByTestId('login-password').fill(USERS.ana.password)
+  await page.getByTestId('login-submit').click()
+  await expect(page).toHaveURL(/\/nft\/nft-001/, { timeout: 15_000 })
+  await expect(page.getByTestId('nft-title')).toBeVisible()
+
+  // Rota protegida continua redirecionando para o login quando visitante
+  await page.getByTestId('header-logout').click()
   await page.goto('/profile')
   await expect(page).toHaveURL(/\/login/)
 })
