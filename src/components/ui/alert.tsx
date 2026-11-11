@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { AlertCircle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const alertVariants = cva('relative w-full rounded-lg border px-4 py-3 text-sm [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-3.5 [&>svg]:size-4', {
+const alertVariants = cva('relative w-full rounded-sm border border-rule px-4 py-3 text-sm [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-3.5 [&>svg]:size-4', {
   variants: {
     variant: {
       default: 'bg-card text-card-foreground',
